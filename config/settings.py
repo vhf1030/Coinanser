@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
-# from ... import mysql_setting
+from my_setting import config as my_config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -74,18 +74,18 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+#
+# # SECURITY WARNING: keep the secret key used in production secret!
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-zf45x5ibm+d(k-v^w7gxivlj)3sz(_zr74ge###=tz1x(di0)g'
-
-# DATABASES = mysql_setting.DATABASES
-# SECRET_KEY = mysql_setting.DATABASES
+# mysql 사용
+DATABASES = my_config.DATABASES
+SECRET_KEY = my_config.SECRET_KEY
 
 
 # Password validation
