@@ -38,6 +38,18 @@ def index(request):
     page_start = max(1, page_obj.number - max(2, page_obj.number - page_len + 4))
     page_end = min(page_len, page_obj.number + max(2, 5 - page_obj.number))
 
+    """
+    rawdata 출력
+    """
+    data_set = [
+            [1, 37.8, 80.8, 41.8],
+            [2, 30.9, 69.5, 32.4],
+            [3, 25.4, 57, 25.7],
+            [4, 11.7, 18.8, 10.5],
+            [5, 11.9, 17.6, 10.4],
+            [6, 11.9, 17.6, 100.4],
+        ]
+
     context = {
         'question_list': page_obj,
         'question_list_len': page_len,
@@ -46,6 +58,7 @@ def index(request):
         'page': page,
         'kw': kw,
         'so': so,
+        'data_set': data_set,
     }
     return render(request, 'coinanser/question_list.html', context)
 

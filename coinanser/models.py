@@ -36,3 +36,16 @@ class Comment(models.Model):
     answer = models.ForeignKey(Answer, null=True, blank=True, on_delete=models.CASCADE)
 
 
+class RawData(models.Model):  # error - 테이블이 제대로 생성되지 않음
+    date_time = models.DateTimeField(primary_key=True),
+    date_time_last = models.DateTimeField(null=True, blank=True),
+    opening_price = models.FloatField(null=True, blank=True),
+    high_price = models.FloatField(null=True, blank=True),
+    low_price = models.FloatField(null=True, blank=True),
+    trade_price = models.FloatField(null=True, blank=True),
+    candle_acc_trade_price = models.FloatField(null=True, blank=True),
+    candle_acc_trade_volume = models.FloatField(null=True, blank=True)
+
+
+
+
