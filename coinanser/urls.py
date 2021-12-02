@@ -6,8 +6,8 @@ from coinanser.views import base_views, question_views, answer_views, comment_vi
 app_name = 'coinanser'
 
 urlpatterns = [
-    path('', base_views.index, name='index'),
-    path('<int:question_id>/', base_views.detail, name='detail'),
+    path('index/', base_views.index, name='index'),
+    path('index/<int:question_id>/', base_views.detail, name='detail'),
     path('question/create/', question_views.question_create, name='question_create'),
     path('question/modify/<int:question_id>/', question_views.question_modify, name='question_modify'),
     path('question/delete/<int:question_id>/', question_views.question_delete, name='question_delete'),
