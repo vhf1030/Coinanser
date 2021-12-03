@@ -15,3 +15,13 @@ def mark(value):
     extensions = ["nl2br", "fenced_code"]
     return mark_safe(markdown.markdown(value, extensions=extensions))
 
+
+@register.filter
+def idx(value, i):
+    return value[i]
+
+
+@register.filter
+def date_convert(dt):
+    # return dt.year, dt.month, dt.day, dt.hour, dt.minute
+    return dt.year, dt.month, dt.day, dt.hour, dt.minute
