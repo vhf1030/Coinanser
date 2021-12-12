@@ -36,7 +36,7 @@ class Comment(models.Model):
     answer = models.ForeignKey(Answer, null=True, blank=True, on_delete=models.CASCADE)
 
 
-class RawData(models.Model):  # error - 테이블이 제대로 생성되지 않음
+class RawData(models.Model):  # error - 테이블이 제대로 생성되지 않음 / 기존 DB를 복사하는 방식으로 진행해야 할 듯
     date_time = models.DateTimeField(primary_key=True),
     date_time_last = models.DateTimeField(null=True, blank=True),
     opening_price = models.FloatField(null=True, blank=True),

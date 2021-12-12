@@ -29,7 +29,7 @@ def index(request):
                'question_list_len': page_len,
                'page_start': page_start,
                'page_end': page_end}
-    return render(request, 'coinanser/question_list.html', context)
+    return render(request, 'coinanser/question_board.html', context)
 
 
 def detail(request, question_id):

@@ -21,5 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('coinanser/', include('coinanser.urls')),
     path('common/', include('common.urls')),
-    path('', base_views.index, name='index'),  # '/' 에 해당되는 path
+    path('', base_views.linechart, name='home'),  # '/' 에 해당되는 path
 ]
