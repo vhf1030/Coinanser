@@ -12,7 +12,7 @@
     function drawChart() {
 
       var data = new google.visualization.DataTable();
-      data.addColumn('datetime', 'Time');
+      data.addColumn('datetime');
       data.addColumn('number', 'A');
 
       data.addRows([
@@ -32,7 +32,7 @@
         },
         vAxis: {
           title: 'KRW',
-          format: 'decimal'
+          format: 'short'
         },
         hAxis: {
           format: 'yy/M/d H:mm',
@@ -48,12 +48,52 @@
       // chart.draw(data, options);
     }
     </script>
+  </head>
+  <head>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['bar']});
+      google.charts.setOnLoadCallback(drawStuff);
 
+    function drawStuff() {
+
+      var data = new google.visualization.DataTable();
+      data.addColumn('datetime', 'Time');
+      data.addColumn('number', 'A');
+
+      data.addRows([
+      {% for row in data_len|ranges %}
+        [
+          new Date("{{ date_time|get_idx:row }}"),
+          {{ trade_price|get_idx:row }},
+        ],
+      {% endfor %}
+      ])
+
+
+      var options = {
+        chart: {
+          title: 'Account of trade price',
+          subtitle: '거래금액 (KRW)'
+        },
+        vAxis: {
+          title: 'KRW',
+          format: 'short',
+        },
+        hAxis: {
+          format: 'yy/M/d H:mm',
+          gridlines: {count: 10}
+        },
+      };
+
+      var chart = new google.charts.Bar(document.getElementById('top_x_div'));
+      chart.draw(data, google.charts.Bar.convertOptions(options));
+    };
+    </script>
   </head>
 </html>
 <div class="container my-3">
-    test4 <div id="linechart_material" style="width: 100%; height: 500px"></div>
-    거래금액 추가 예정
+    <div id="linechart_material" style="width: 100%; height: 500px"></div>
+    <div id="top_x_div" style="width: 100%; height: 500px"></div>
 </div>
 
 {% endblock %}
