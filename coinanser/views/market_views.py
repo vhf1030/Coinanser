@@ -6,9 +6,9 @@ from coinanser.upbit_quotation.get_rawdata import *
 import json
 
 
-def linechart(request):
+def market_data(request):
     """
-    rawdata 출력
+    upbit market rawdata 출력
     """
     gcm = get_candles_minutes('KRW-XRP')
     cr = candles_raw(gcm)
@@ -25,6 +25,10 @@ def linechart(request):
 
     context = {
         'data_set': data_set,
+        'date_time': [d['date_time'] for d in cr],
+        'mean_price': [d['candle_acc_trade_price'] / d['candle_acc_trade_volume'] for d in cr],
+        'trade_price': [d['candle_acc_trade_price'] for d in cr],
+        'data_len': len(cr),
     }
-    return render(request, 'coinanser/market_price.html', context)
+    return render(request, 'coinanser/market_chart.html', context)
 

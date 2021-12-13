@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load coinanser_filter %}
+{% block content %}
+<html>
+  <head>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['line']});
+      // tooltip 사용시
+      // google.charts.load('current', {'packages':['corechart']});
+      google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+      var data = new google.visualization.DataTable();
+      // data.addColumn('string', 'Day');
+      data.addColumn('datetime', 'Time');
+      data.addColumn('number', 'A');
+      // data.addColumn('number', 'B');
+      // data.addColumn('number', 'C');
+      // A column for custom tooltip content
+      // data.addColumn({type: 'number', role: 'interval'});
+      // data.addColumn({type: 'number', role: 'interval'});
+
+      // data.addRows(context['data_set'])
+      // data.addRows({{ data_set }})
+      data.addRows([
+      {% for ds in data_set %}
+        [
+          new Date("{{ ds|idx:0 }}"),
+          {{ ds|idx:1 }},
+          // {{ ds|idx:2 }},
+          // {{ ds|idx:3 }},
+        ],
+      {% endfor %}
+      ])
+
+      var options = {
+        chart: {
+          title: 'Mean price of market',
+          subtitle: '평균가격 (KRW)'
+        },
+        // width: 900,
+        // height: 500,
+        vAxis: {
+          title: 'KRW',
+          format: 'decimal'
+        },
+        hAxis: {
+          format: 'yy/M/d H:mm',
+          gridlines: {count: 10}
+        },
+      };
+
+      var chart = new google.charts.Line(document.getElementById('linechart_material'));
+      chart.draw(data, google.charts.Line.convertOptions(options));
+
+      // tooltip 사용시
+      // var chart = new google.visualization.LineChart(document.getElementById('linechart_material'));
+      // chart.draw(data, options);
+    }
+    </script>
+
+  </head>
+</html>
+<div class="container my-3">
+    <!-- google chart test -->
+<!--    {% include "../google_chart/corechart.html" %}-->
+<!--    test1 <div id="corechart" style="width: 100%; height: 500px;"></div>-->
+<!--    {% include "../google_chart/columnchart_material.html" %}-->
+<!--    test2 <div id="columnchart_material" style="width: 100%; height: 500px;"></div>-->
+<!--    {% include "../google_chart/linechart_material.html" %}-->
+<!--    test3 <div id="linechart_material" style="width: 100%; height: 500px"></div>-->
+    test4 <div id="linechart_material" style="width: 100%; height: 500px"></div>
+    거래금액 추가 예정
+</div>
+
+{% endblock %}
+
+
+

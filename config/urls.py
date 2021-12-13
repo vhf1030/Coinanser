@@ -15,11 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from coinanser.views import base_views
+from coinanser.views import market_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('coinanser/', include('coinanser.urls')),
     path('common/', include('common.urls')),
-    path('', base_views.linechart, name='home'),  # '/' 에 해당되는 path
+    path('', market_views.market_data, name='home'),  # '/' 에 해당되는 path
 ]
