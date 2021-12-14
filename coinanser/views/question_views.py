@@ -18,7 +18,7 @@ def question_create(request):
             question.author = request.user  # author 속성에 로그인 계정 저장
             question.create_date = timezone.now()
             question.save()
-            return redirect('coinanser:index')
+            return redirect('coinanser:question_board')
     else:
         form = QuestionForm()
     context = {'form': form}
@@ -58,4 +58,4 @@ def question_delete(request, question_id):
         messages.error(request, '삭제권한이 없습니다')
         return redirect('coinanser:detail', question_id=question.id)
     question.delete()
-    return redirect('coinanser:index')
+    return redirect('coinanser:question_board')

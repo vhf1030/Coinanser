@@ -8,25 +8,28 @@ import json
 
 def market_data(request):
     """
-    upbit market rawdata 출력
+    upbit krw market list 및 rawdata 출력
     """
-    gcm = get_candles_minutes('KRW-XRP')
+    market = request.GET.get('market', 'KRW-BTC')
+    market_all = get_market_all(print_=False)
+    gcm = get_candles_minutes(market)
     cr = candles_raw(gcm)
 
-    data_set = [
-        [
-            d['date_time'],
-            d['candle_acc_trade_price'] / d['candle_acc_trade_volume'],
-            d['low_price'],
-            d['high_price'],
-        ] for d in cr]
-
-    # data_set = [[datetime_convert(d['date_time'], to_str=False), d['date_time'], d['trade_price']] for i, d in enumerate(cr[:60])]
+    mean_price, check = [], 1
+    for d in cr:
+        if d['candle_acc_trade_volume'] == 0:  # 거래량이 0인 경우 평균가격 계산 에러
+            check += 1
+        else:
+            mp = [d['candle_acc_trade_price'] / d['candle_acc_trade_volume']]
+            mean_price.extend(mp * check)
+            check = 1
 
     context = {
-        'data_set': data_set,
+        # 'data_set': data_set,
+        'market_list': market_all,
+        'market': market,
         'date_time': [d['date_time'] for d in cr],
-        'mean_price': [d['candle_acc_trade_price'] / d['candle_acc_trade_volume'] for d in cr],
+        'mean_price': mean_price,
         'trade_price': [d['candle_acc_trade_price'] for d in cr],
         'data_len': len(cr),
     }

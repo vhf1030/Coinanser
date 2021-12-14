@@ -22,8 +22,12 @@ def get_idx(value, i):
 
 
 @register.filter()
+def get_keys(dictionary):
+    return list(dictionary.keys())
+
+
+@register.filter()
 def date_convert(dt):
-    # return dt.year, dt.month, dt.day, dt.hour, dt.minute
     return dt.year, dt.month, dt.day, dt.hour, dt.minute
 
 

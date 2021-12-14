@@ -27,7 +27,7 @@
 
       var options = {
         chart: {
-          title: 'Mean price of market',
+          title: 'Mean price of {{ market_list|get_idx:market|get_idx:'english_name' }}',
           subtitle: '평균가격 (KRW)'
         },
         vAxis: {
@@ -72,7 +72,7 @@
 
       var options = {
         chart: {
-          title: 'Account of trade price',
+          title: 'Trade price account of {{ market_list|get_idx:market|get_idx:'english_name' }}',
           subtitle: '거래금액 (KRW)'
         },
         vAxis: {
@@ -92,11 +92,35 @@
   </head>
 </html>
 <div class="container my-3">
+    <div class="col-3">
+        <select class="form-control market">
+            {% for ml in market_list|get_keys %}
+            <option value="{{ ml }}" {% if market == ml %}selected{% endif %}>
+                {{ market_list|get_idx:ml|get_idx:'korean_name' }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
     <div id="linechart_material" style="width: 100%; height: 500px"></div>
+    <br>
     <div id="top_x_div" style="width: 100%; height: 500px"></div>
+    test
+    {{ market_list|get_idx:'KRW-BTC'|get_idx:'korean_name' }}
+    {{ market_list|get_keys }}
 </div>
-
+<form id="searchForm" method="get" action="{% url 'coinanser:market_data' %}">
+    <input type="hidden" id="market" name="market" value="{{ market }}">
+</form>
 {% endblock %}
-
+{% block script %}
+<script type='text/javascript'>
+$(document).ready(function(){
+    $(".market").on('change', function() {
+        $("#market").val($(this).val());
+        $("#searchForm").submit();
+    });
+});
+</script>
+{% endblock %}
 
 

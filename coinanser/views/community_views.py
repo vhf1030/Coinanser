@@ -2,8 +2,6 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404
 from django.db.models import Q, Count
 from coinanser.models import Question
-from coinanser.upbit_quotation.get_rawdata import *
-import json
 
 
 def question_board(request):

@@ -7,7 +7,7 @@ from coinanser.views import rawdata_views  # google chart 인자 전달 test
 app_name = 'coinanser'
 
 urlpatterns = [
-    path('home/', market_views.market_data, name='home'),
+    path('home/', market_views.market_data, name='market_data'),
     path('community/', community_views.question_board, name='question_board'),
     path('test/', rawdata_views.select_test, name='select_test'),  # google chart 인자 전달 test
     path('community/<int:question_id>/', community_views.detail, name='detail'),

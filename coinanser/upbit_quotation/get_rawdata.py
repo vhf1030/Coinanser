@@ -42,7 +42,7 @@ def get_candles_minutes(market_, time_to_=False, min_=1, count_=200, sleep_=0.1)
 def candles_raw(gcm_, to_time_=False, reverse_=True):
     cr_list = []
     from_time = gcm_[-1]['candle_date_time_kst']
-    to_time = gcm_[0]['candle_date_time_kst'] if not to_time_ else utils.datetime_convert(to_time_, sec_delta=-60)
+    to_time = gcm_[0]['candle_date_time_kst'] if not to_time_ else datetime_convert(to_time_, sec_delta=-60)
     check_time = from_time  # 먼 시점부터 현재 시점으로 진행: 입력시간이 -1번 인덱스에 저장(gcm과 순서가 반대)
     cm_dict = {cm['candle_date_time_kst']: cm for cm in gcm_}
     remain_key_list = ['opening_price', 'high_price', 'low_price', 'trade_price', 'candle_acc_trade_price', 'candle_acc_trade_volume']
