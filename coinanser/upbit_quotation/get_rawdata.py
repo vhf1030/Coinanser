@@ -5,6 +5,7 @@ from pprint import pprint
 
 
 # Get data
+# https://docs.upbit.com/reference/
 def get_market_all(krw=True, print_=True):
     url = "https://api.upbit.com/v1/market/all"
     querystring = {"isDetails": "true"}
@@ -39,7 +40,7 @@ def get_candles_minutes(market_, time_to_=False, min_=1, count_=200, sleep_=0.1)
 # get_candles_minutes('KRW-BTC', time_to_='2021-09-30T15:39:01', count_=1)  # 15:39:00 ~ 15:40:00
 
 
-def candles_raw(gcm_, to_time_=False, reverse_=True):
+def candles_raw(gcm_, to_time_=False, reverse_=True, min_=1):
     cr_list = []
     from_time = gcm_[-1]['candle_date_time_kst']
     to_time = gcm_[0]['candle_date_time_kst'] if not to_time_ else datetime_convert(to_time_, sec_delta=-60)
@@ -67,7 +68,7 @@ def candles_raw(gcm_, to_time_=False, reverse_=True):
                 'candle_acc_trade_volume': 0,
             }
         cr_list.append(cr_tmp)
-        check_time = datetime_convert(check_time, sec_delta=60)
+        check_time = datetime_convert(check_time, sec_delta=60*min_)
     if reverse_:
         cr_list.reverse()  # gcm과 순서가 동일하게 변경
     return cr_list

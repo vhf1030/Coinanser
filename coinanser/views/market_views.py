@@ -10,10 +10,12 @@ def market_data(request):
     """
     upbit krw market list 및 rawdata 출력
     """
+    unit_list = [1, 3, 5, 15, 10, 30, 60, 240]
+    unit = int(request.GET.get('unit', 1))
     market = request.GET.get('market', 'KRW-BTC')
     market_all = get_market_all(print_=False)
-    gcm = get_candles_minutes(market)
-    cr = candles_raw(gcm)
+    gcm = get_candles_minutes(market, min_=unit)
+    cr = candles_raw(gcm, min_=unit)
 
     mean_price, check = [], 1
     for d in cr:
@@ -26,6 +28,8 @@ def market_data(request):
 
     context = {
         # 'data_set': data_set,
+        'unit_list': unit_list,
+        'unit': unit,
         'market_list': market_all,
         'market': market,
         'date_time': [d['date_time'] for d in cr],
