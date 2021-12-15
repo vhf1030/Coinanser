@@ -44,7 +44,7 @@
         },
         chartArea: {
           left: '10%',
-          width: '70%'
+          width: '75%'
         },
       };
       // var chart = new google.charts.Line(document.getElementById('linechart_material'));
@@ -95,7 +95,7 @@
         },
         chartArea: {
           left: '10%',
-          width: '70%'
+          width: '75%'
         },
         bar: {groupWidth: '100%'},
       };
@@ -136,6 +136,7 @@
 <!--    test-->
 <!--    {{ market_list|get_idx:'KRW-BTC'|get_idx:'korean_name' }}-->
 <!--    {{ market_list|get_keys }}-->
+
 </div>
 <form id="searchForm" method="get" action="{% url 'coinanser:market_data' %}">
     <input type="hidden" id="market" name="market" value="{{ market }}">
