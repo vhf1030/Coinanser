@@ -4,16 +4,16 @@
 <html>
   <head>
     <script type="text/javascript">
-      google.charts.load('current', {'packages':['line']});
+      // google.charts.load('current', {'packages':['line']});
       // core chart 사용시 tooltip 변경이 자유로움 - corechart로 변경하는 부분 보류
       // google.charts.load('current', {'packages':['corechart']});
+      google.charts.load('current', {'packages':['line', 'corechart']});
       google.charts.setOnLoadCallback(drawChart);
 
     function drawChart() {
 
       var data = new google.visualization.DataTable();
       data.addColumn('datetime');
-      // data.addColumn('number', 'A');
       data.addColumn('number', '{{ market }}');
 
       data.addRows([
@@ -34,18 +34,25 @@
         vAxis: {
           title: 'KRW',
           format: 'decimal',
+          widths: 100,
+          scaleType: 'log', //
+          gridlines: {count: 1.5}, //
         },
         hAxis: {
           format: 'yy/M/d H:mm',
-          gridlines: {count: 10},
+          gridlines: {count: 3},
+        },
+        chartArea: {
+          left: '10%',
+          width: '70%'
         },
       };
-      var chart = new google.charts.Line(document.getElementById('linechart_material'));
-      chart.draw(data, google.charts.Line.convertOptions(options));
+      // var chart = new google.charts.Line(document.getElementById('linechart_material'));
+      // chart.draw(data, google.charts.Line.convertOptions(options));
 
-      // tooltip 사용시
-      // var chart = new google.visualization.LineChart(document.getElementById('linechart_material'));
-      // chart.draw(data, options);
+      // tooltip 추가 예정
+      var chart = new google.visualization.LineChart(document.getElementById('linechart_material'));
+      chart.draw(data, options);
     }
     </script>
   </head>
@@ -77,17 +84,28 @@
         },
         vAxis: {
           title: 'KRW',
-          format: 'decimal',
+          format: 'short',
+          widths: 100,
+          scaleType: 'log', //
+          gridlines: {count: 1.5}, //
         },
         hAxis: {
           format: 'yy/M/d H:mm',
-          gridlines: {count: 10}
+          gridlines: {count: 3},
         },
-        bar: {groupWidth: '99%'},
+        chartArea: {
+          left: '10%',
+          width: '70%'
+        },
+        bar: {groupWidth: '100%'},
       };
 
-      var chart = new google.charts.Bar(document.getElementById('top_x_div'));
-      chart.draw(data, google.charts.Bar.convertOptions(options));
+      // var chart = new google.charts.Bar(document.getElementById('top_x_div'));
+      // chart.draw(data, google.charts.Bar.convertOptions(options));
+
+      // tooltip 추가 예정
+      var chart = new google.visualization.ColumnChart(document.getElementById('top_x_div'));
+      chart.draw(data, options);
     };
     </script>
   </head>
@@ -114,7 +132,6 @@
         </div>
     </div>
     <div id="linechart_material" style="width: 100%; height: 500px"></div>
-    <br><br><br>
     <div id="top_x_div" style="width: 100%; height: 210px"></div>
 <!--    test-->
 <!--    {{ market_list|get_idx:'KRW-BTC'|get_idx:'korean_name' }}-->

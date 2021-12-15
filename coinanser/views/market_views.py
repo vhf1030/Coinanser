@@ -14,7 +14,7 @@ def market_data(request):
     unit_str = {u: str(u) + ' 분' if type(u) == int else u for u in unit_list}
     unit_str['days'], unit_str['weeks'], unit_str['months'] = '일', '주', '월'
 
-    unit_get = request.GET.get('unit', 1)
+    unit_get = request.GET.get('unit', 'days')
     unit = unit_get if unit_get in ['days', 'weeks', 'months'] else int(unit_get)
     market = request.GET.get('market', 'KRW-BTC')
     market_all = get_market_all(print_=False)
