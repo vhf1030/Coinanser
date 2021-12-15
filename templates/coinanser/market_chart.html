@@ -105,9 +105,9 @@
         </div>
         <div class="col-1.5">
             <select class="form-control unit">
-                {% for un in unit_list %}
+                {% for un in unit_str %}
                 <option value="{{ un }}" {% if unit == un %}selected{% endif %}>
-                    {{ un }} 분
+                    {{ unit_str|get_idx:un }}
                 </option>
                 {% endfor %}
             </select>
@@ -115,7 +115,7 @@
     </div>
     <div id="linechart_material" style="width: 100%; height: 500px"></div>
     <br><br><br>
-    <div id="top_x_div" style="width: 100%; height: 500px"></div>
+    <div id="top_x_div" style="width: 100%; height: 210px"></div>
 <!--    test-->
 <!--    {{ market_list|get_idx:'KRW-BTC'|get_idx:'korean_name' }}-->
 <!--    {{ market_list|get_keys }}-->
