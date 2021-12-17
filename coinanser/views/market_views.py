@@ -41,8 +41,10 @@ def market_data(request):
         'unit': unit,
         'date_time': [d['date_time'] for d in gca],
         'date_time_last': date_time_last,
+        'high_price': [d['high_price'] for d in gca],
         'mean_price': mean_price,
-        'trade_price': [d['candle_acc_trade_price'] for d in gca],
+        'low_price': [d['low_price'] for d in gca],
+        'trade_price_account': [d['candle_acc_trade_price'] for d in gca],
         'data_len': len(gca),
     }
     return render(request, 'coinanser/market_chart.html', context)

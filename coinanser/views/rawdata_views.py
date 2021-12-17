@@ -17,7 +17,7 @@ def select_test(request):
         'test': test,
     }
     # return render(request, 'google_chart/linechart_material.html', {'contextJson': json.dumps(context)})
-    return render(request, 'google_chart/linechart_material.html', context)
+    return render(request, 'google_chart/test.html', context)
 
 
 
