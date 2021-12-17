@@ -32,11 +32,12 @@
           subtitle: '평균가격 (KRW)'
         },
         vAxis: {
-          title: 'KRW',
+          title: 'KRW (log scale)',
           format: 'decimal',
           widths: 100,
           scaleType: 'log', //
           gridlines: {count: 1.5}, //
+          titleTextStyle: {italic: false}, //
         },
         hAxis: {
           format: 'yy/M/d H:mm',
@@ -44,7 +45,8 @@
         },
         chartArea: {
           left: '10%',
-          width: '75%'
+          width: '75%',
+          height: '90%'
         },
       };
       // var chart = new google.charts.Line(document.getElementById('linechart_material'));
@@ -83,19 +85,21 @@
           subtitle: '거래금액 (KRW)'
         },
         vAxis: {
-          title: 'KRW',
+          title: 'KRW (log scale)',
           format: 'short',
           widths: 100,
           scaleType: 'log', //
           gridlines: {count: 1.5}, //
+          titleTextStyle: {italic: false}, //
         },
         hAxis: {
           format: 'yy/M/d H:mm',
           gridlines: {count: 3},
         },
         chartArea: {
-          left: '10%',
-          width: '75%'
+          left: '9.5%',
+          width: '76%',
+          height: '70%'
         },
         bar: {groupWidth: '100%'},
       };
@@ -131,8 +135,20 @@
             </select>
         </div>
     </div>
-    <div id="linechart_material" style="width: 100%; height: 500px"></div>
-    <div id="top_x_div" style="width: 100%; height: 210px"></div>
+    <div class="container">
+        <div class="row justify-content-between my-3">
+            <span>Mean price of {{ market_list|get_idx:market|get_idx:'english_name' }}</span>
+            <span>
+                마지막 거래시각: {{ date_time_last }} &nbsp;
+                <button class="btn btn-outline-secondary btn-sm" onClick="window.location.reload()">새로고침</button>
+            </span>
+            <div id="linechart_material" style="width: 100%; height: 400px"></div>
+        </div>
+        <div class="row justify-content-between my-3">
+            <p>Trade price account of {{ market_list|get_idx:market|get_idx:'english_name' }}</p>
+            <div id="top_x_div" style="width: 100%; height: 150px"></div>
+        </div>
+    </div>
 <!--    test-->
 <!--    {{ market_list|get_idx:'KRW-BTC'|get_idx:'korean_name' }}-->
 <!--    {{ market_list|get_keys }}-->

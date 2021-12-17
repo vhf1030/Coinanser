@@ -22,6 +22,7 @@ def market_data(request):
     # cr = candles_raw(gcm, min_=unit)
     gca = get_candles_api(market, unit_=unit)
 
+    date_time_last = datetime_convert(gca[0]['date_time_last'], to_str=False).strftime("%y/%m/%d %H:%M:%S")
     mean_price, check = [], 1
     for d in gca:
         if d['candle_acc_trade_volume'] == 0:  # 거래량이 0인 경우 평균가격 계산 에러
@@ -39,6 +40,7 @@ def market_data(request):
         'unit_str': unit_str,
         'unit': unit,
         'date_time': [d['date_time'] for d in gca],
+        'date_time_last': date_time_last,
         'mean_price': mean_price,
         'trade_price': [d['candle_acc_trade_price'] for d in gca],
         'data_len': len(gca),
