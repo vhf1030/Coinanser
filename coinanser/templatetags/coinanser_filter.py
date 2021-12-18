@@ -36,3 +36,12 @@ def ranges(count):
     return range(count)
 
 
+@register.filter()
+def get_min(li):
+    return min(li)
+
+
+@register.filter()
+def get_max(li):
+    return max(li)
+

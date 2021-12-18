@@ -42,10 +42,15 @@
           scaleType: 'log', //
           gridlines: {count: 1.5}, //
           titleTextStyle: {italic: false}, //
+          viewWindow: {
+            min: {{ low_price|get_min }},
+            max: {{ high_price|get_max }},
+          },
         },
         hAxis: {
           format: 'yy/M/d H:mm',
           gridlines: {count: 3},
+
         },
         colors: ['#8B0707', '#3366CC', '#E67300'],
         series: {
@@ -108,19 +113,19 @@
           format: 'short',
           widths: 100,
           scaleType: 'log', //
-          gridlines: {count: 1.5}, //
-          titleTextStyle: {italic: false}, //
+          gridlines: { count: 1.5 }, //
+          titleTextStyle: { italic: false }, //
         },
         hAxis: {
           format: 'yy/M/d H:mm',
-          gridlines: {count: 3},
+          gridlines: { count: 3 },
         },
         chartArea: {
           left: '9.5%',
           width: '76%',
           height: '70%'
         },
-        bar: {groupWidth: '100%'},
+        bar: { groupWidth: '100%' },
       };
 
       // var chart = new google.charts.Bar(document.getElementById('top_x_div'));
