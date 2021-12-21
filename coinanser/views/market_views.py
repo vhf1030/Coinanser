@@ -18,11 +18,17 @@ def market_data(request):
     unit = unit_get if unit_get in ['days', 'weeks', 'months'] else int(unit_get)
     market = request.GET.get('market', 'KRW-BTC')
     market_all = get_market_all(print_=False)
-    # gcm = get_candles_minutes(market, min_=unit)
-    # cr = candles_raw(gcm, min_=unit)
-    gca = get_candles_api(market, unit_=unit)
-
-    date_time_last = datetime_convert(gca[0]['date_time_last'], to_str=False).strftime("%y/%m/%d %H:%M:%S")
+    # time_now = datetime.now().strftime("%Y/%m/%d %H:%M")
+    # endtime_get = request.GET.get('endtime', time_now)
+    # endtime = datetime.strptime(min(time_now, endtime_get), "%Y/%m/%d %H:%M")
+    # # gcm = get_candles_minutes(market, min_=unit)
+    # # cr = candles_raw(gcm, min_=unit)
+    # gca = get_candles_api(market, unit_=unit, time_to_=endtime)
+    time_now = datetime.now().strftime("%Y/%m/%d %H:%M")  # str
+    endtime_get = request.GET.get('endtime', time_now)  # str
+    endtime = min(time_now, endtime_get)  # str
+    gca = get_candles_api(market, unit_=unit, time_to_=datetime_convert(datetime.strptime(endtime, "%Y/%m/%d %H:%M"), sec_delta=60))
+    date_time_last = datetime_convert(gca[0]['date_time_last'], to_str=False).strftime("%Y/%m/%d %H:%M:%S")
     mean_price, check = [], 1
     for d in gca:
         if d['candle_acc_trade_volume'] == 0:  # 거래량이 0인 경우 평균가격 계산 에러
@@ -39,6 +45,7 @@ def market_data(request):
         # 'unit_list': unit_list,
         'unit_str': unit_str,
         'unit': unit,
+        'endtime': endtime,
         'date_time': [d['date_time'] for d in gca],
         'date_time_last': date_time_last,
         'high_price': [d['high_price'] for d in gca],

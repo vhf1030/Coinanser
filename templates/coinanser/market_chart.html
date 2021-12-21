@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 {% load coinanser_filter %}
+
 {% block content %}
+
 <html>
   <head>
     <script type="text/javascript">
@@ -138,8 +140,9 @@
     </script>
   </head>
 </html>
+
 <div class="container my-3">
-    <div class="row justify-content-start my-3">
+    <div class="row justify-content-start">
         <div class="col-3">
             <select class="form-control market">
                 {% for ml in market_list|get_keys %}
@@ -158,33 +161,49 @@
                 {% endfor %}
             </select>
         </div>
-    </div>
-    <div class="container">
-        <div class="row justify-content-between my-3">
-            <span>Mean price of {{ market_list|get_idx:market|get_idx:'english_name' }}</span>
-            <span>
-                마지막 거래시각: {{ date_time_last }} &nbsp;
-                <button class="btn btn-outline-secondary btn-sm" onClick="window.location.reload()">새로고침</button>
-            </span>
-            <div id="linechart_material" style="width: 100%; height: 400px"></div>
+        <div class="col-3 ml-auto">
+<!--            <div class="container small" style="display: flex;">-->
+<!--                <p style="width: 20%;">기준시각:</p>-->
+<!--                <input class="form-control datetime" style="height: 20px; width: 150px;" type="text" value="{{ endtime }}" />-->
+            <div class="container small">
+                <span>기준시각:</span>
+                <input class="form-control datetime" style="height: 30px; width: 150px;" type="text" value="{{ endtime }}" />
+                <form name="currentForm" method="get" action="">
+                    <input type="hidden" name="market" value="{{ market }}">
+                    <input type="hidden" name="unit" value="{{ unit }}">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm" style="width: 150px;">현재시각</button>
+                </form>
+            </div>
         </div>
-        <br>
-        <div class="row justify-content-between my-3">
-            <p>Trade price account of {{ market_list|get_idx:market|get_idx:'english_name' }}</p>
-            <div id="top_x_div" style="width: 100%; height: 150px"></div>
-        </div>
     </div>
+</div>
+<div class="container my-3">
+    <div class="row justify-content-between">
+        <span>Mean price of {{ market_list|get_idx:market|get_idx:'english_name' }}</span>
+        <span class="small">
+            마지막 거래시각: {{ date_time_last }} &nbsp;
+        </span>
+        <div id="linechart_material" style="width: 100%; height: 400px"></div>
+    </div>
+    <br>
+    <div class="row justify-content-between my-3">
+        <p>Trade price account of {{ market_list|get_idx:market|get_idx:'english_name' }}</p>
+        <div id="top_x_div" style="width: 100%; height: 150px"></div>
+    </div>
+</div>
 <!--    test-->
 <!--    {{ market_list|get_idx:'KRW-BTC'|get_idx:'korean_name' }}-->
 <!--    {{ market_list|get_keys }}-->
 
-</div>
 <form id="searchForm" method="get" action="{% url 'coinanser:market_data' %}">
     <input type="hidden" id="market" name="market" value="{{ market }}">
     <input type="hidden" id="unit" name="unit" value="{{ unit }}">
+    <input type="hidden" id="endtime" name="endtime" value="{{ endtime }}">
 </form>
+
 {% endblock %}
 {% block script %}
+
 <script type='text/javascript'>
 $(document).ready(function(){
     $(".market").on('change', function() {
@@ -195,8 +214,11 @@ $(document).ready(function(){
         $("#unit").val($(this).val());
         $("#searchForm").submit();
     });
+    $(".datetime").datetimepicker().on('change', function() {
+        $("#endtime").val($(this).val());
+        $("#searchForm").submit();
+    });
 });
 </script>
 {% endblock %}
-
 
