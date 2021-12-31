@@ -1,32 +1,44 @@
-from django.core.paginator import Paginator
-from django.shortcuts import render, get_object_or_404
-from django.db.models import Q, Count
-from coinanser.models import Question
+from django.shortcuts import render
 from coinanser.upbit_quotation.get_rawdata import *
-import json
 
 
 def market_data(request):
     """
     upbit krw market list 및 rawdata 출력
     """
+    market = request.GET.get('market')
+    market_kw = request.GET.get('market_kw', '').lower()
+    unit_get = request.GET.get('unit', 'days')
+    endtime_get = request.GET.get('endtime', '')  # str
+
+    market_all = get_market_all(print_=False)
+    market_search = {k: market_all[k] for k in market_all
+                     if market_kw in market_all[k]['korean_name']
+                     or market_kw in market_all[k]['english_name'].lower()
+                     or market_kw in market_all[k]['symbol'].lower()} if market_kw else market_all
+    market_search = market_all if not market_search else market_search
+    if market not in market_search:
+        market = list(market_search.keys())[0]
+
     unit_list = [1, 3, 5, 10, 15, 30, 60, 240, 'days', 'weeks', 'months']
     unit_str = {u: str(u) + ' 분' if type(u) == int else u for u in unit_list}
     unit_str['days'], unit_str['weeks'], unit_str['months'] = '일', '주', '월'
-
-    unit_get = request.GET.get('unit', 'days')
     unit = unit_get if unit_get in ['days', 'weeks', 'months'] else int(unit_get)
-    market = request.GET.get('market', 'KRW-BTC')
-    market_all = get_market_all(print_=False)
+
     # time_now = datetime.now().strftime("%Y/%m/%d %H:%M")
     # endtime_get = request.GET.get('endtime', time_now)
     # endtime = datetime.strptime(min(time_now, endtime_get), "%Y/%m/%d %H:%M")
     # # gcm = get_candles_minutes(market, min_=unit)
     # # cr = candles_raw(gcm, min_=unit)
     # gca = get_candles_api(market, unit_=unit, time_to_=endtime)
+
+    # time_now = datetime.now().strftime("%Y/%m/%d %H:%M")  # str
+    # endtime_get = request.GET.get('endtime', time_now)  # str
+    # endtime = min(time_now, endtime_get)  # str
+
     time_now = datetime.now().strftime("%Y/%m/%d %H:%M")  # str
-    endtime_get = request.GET.get('endtime', time_now)  # str
-    endtime = min(time_now, endtime_get)  # str
+    endtime = min(time_now, endtime_get) if endtime_get else time_now # str
+
     gca = get_candles_api(market, unit_=unit, time_to_=datetime_convert(datetime.strptime(endtime, "%Y/%m/%d %H:%M"), sec_delta=60))
     date_time_last = datetime_convert(gca[0]['date_time_last'], to_str=False).strftime("%Y/%m/%d %H:%M:%S")
     mean_price, check = [], 1
@@ -40,7 +52,8 @@ def market_data(request):
 
     context = {
         # 'data_set': data_set,
-        'market_list': market_all,
+        'market_kw': market_kw,
+        'market_list': market_search,
         'market': market,
         # 'unit_list': unit_list,
         'unit_str': unit_str,

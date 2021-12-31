@@ -143,17 +143,25 @@
 
 <div class="container my-3">
     <div class="row justify-content-start">
-        <div class="col-3">
-            <select class="form-control market">
-                {% for ml in market_list|get_keys %}
-                <option value="{{ ml }}" {% if market == ml %}selected{% endif %}>
-                    {{ market_list|get_idx:ml|get_idx:'korean_name' }}
-                </option>
-                {% endfor %}
-            </select>
+        <div class="col-3" style="position: relative;">
+            <div class="container small" style="position: absolute; bottom: 0px; left: 0px;">
+                <span>마켓명:</span><br>
+                <input class="form-control market_kw"
+                       style="height: 30px; width: 150px; display:inline-block;" type="text" value="{{ market_kw }}" />
+                <button class="btn btn-outline-secondary btn-sm" type="button" id="mk_search"
+                        style="height: 30px; width: 50px; position: absolute;">검색</button>
+
+                <select class="form-control-sm market" style="height: 30px; width: 200px;">
+                    {% for ml in market_list|get_keys %}
+                    <option value="{{ ml }}" {% if market == ml %}selected{% endif %}>
+                        {{ market_list|get_idx:ml|get_idx:'korean_name' }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
         </div>
-        <div class="col-1.5">
-            <select class="form-control unit">
+        <div class="col-1.5 small" style="position: relative;">
+            <select class="form-control-sm unit" style="height: 30px; position: absolute; bottom: 0px; left: 0px;">
                 {% for un in unit_str %}
                 <option value="{{ un }}" {% if unit == un %}selected{% endif %}>
                     {{ unit_str|get_idx:un }}
@@ -169,6 +177,7 @@
                 <span>기준시각:</span>
                 <input class="form-control datetime" style="height: 30px; width: 150px;" type="text" value="{{ endtime }}" />
                 <form name="currentForm" method="get" action="">
+                    <input type="hidden" name="market_kw" value="{{ market_kw }}">
                     <input type="hidden" name="market" value="{{ market }}">
                     <input type="hidden" name="unit" value="{{ unit }}">
                     <button type="submit" class="btn btn-outline-secondary btn-sm" style="width: 150px;">현재시각</button>
@@ -191,11 +200,9 @@
         <div id="top_x_div" style="width: 100%; height: 150px"></div>
     </div>
 </div>
-<!--    test-->
-<!--    {{ market_list|get_idx:'KRW-BTC'|get_idx:'korean_name' }}-->
-<!--    {{ market_list|get_keys }}-->
 
 <form id="searchForm" method="get" action="{% url 'coinanser:market_data' %}">
+    <input type="hidden" id="market_kw" name="market_kw" value="{{ market_kw }}">
     <input type="hidden" id="market" name="market" value="{{ market }}">
     <input type="hidden" id="unit" name="unit" value="{{ unit }}">
     <input type="hidden" id="endtime" name="endtime" value="{{ endtime }}">
@@ -206,18 +213,26 @@
 
 <script type='text/javascript'>
 $(document).ready(function(){
+    $("#mk_search").on('click', function() {
+        $("#market_kw").val($(".market_kw").val());
+        $("#searchForm").submit();
+    });
+
     $(".market").on('change', function() {
         $("#market").val($(this).val());
         $("#searchForm").submit();
     });
+
     $(".unit").on('change', function() {
         $("#unit").val($(this).val());
         $("#searchForm").submit();
     });
+
     $(".datetime").datetimepicker().on('change', function() {
         $("#endtime").val($(this).val());
         $("#searchForm").submit();
     });
+
 });
 </script>
 {% endblock %}
