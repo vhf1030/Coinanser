@@ -36,6 +36,30 @@ class Comment(models.Model):
     answer = models.ForeignKey(Answer, null=True, blank=True, on_delete=models.CASCADE)
 
 
+class TradeMonitering(models.Model):
+    trade_id = models.TextField(primary_key=True)  # 첫 거래요청 id
+    start_date_time = models.DateTimeField(db_index=True)  # 모델 예측 시각
+    predict_model = models.TextField()  # 예측모델 이름
+    model_version = models.FloatField()  # 모델 버전
+    market = models.TextField()  # 마켓명
+    bid_goal = models.FloatField()  # 목표 매수가격
+    ask_goal = models.FloatField()  # 목표 매도가격
+
+    bid_date_time = models.DateTimeField(blank=True, null=True)  # 최종 매수시각  # 예측값이 변경된 경우 취소
+    bid_mean = models.FloatField(blank=True, null=True)  # 실제 매수가격  # 목표가와 다른 경우 실패처리
+    bid_trade_price = models.FloatField(blank=True, null=True)  # 수수료 포함 매수금액
+    ask_date_time = models.DateTimeField(blank=True, null=True)  # 최종 매도시각  # 시장가 5000원 이하면 지정가 매도
+    ask_mean = models.FloatField(blank=True, null=True)  # 실제 매도가격  # 목표가와 다른 경우 실패처리
+    ask_trade_price = models.FloatField(blank=True, null=True)  # 수수료 포함 매도금액
+    trade_volume = models.FloatField(blank=True, null=True)  # 최종 거래량
+    candle_acc_trade_volume = models.FloatField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'rawdata_krw-ada'
+# rawdata_2102 제거 가능여부 및 inspectdb index 확인해보고 start_date_time db_index 추가하기!
+
+
 # class RawData(models.Model):  # error - 테이블이 제대로 생성되지 않음 / 기존 DB를 복사하는 방식으로 진행해야 할 듯
 #     date_time = models.DateTimeField(primary_key=True),
 #     date_time_last = models.DateTimeField(null=True, blank=True),
@@ -46,11 +70,11 @@ class Comment(models.Model):
 #     candle_acc_trade_price = models.FloatField(null=True, blank=True),
 #     candle_acc_trade_volume = models.FloatField(null=True, blank=True)
 
+
 # 기존 db와 연동하는 경우:
 # 1. python manage.py inspectdb 로 확인 및 복사하여 class 생성
 # 2. python manage.py makemigrations
 # 3. python manage.py migrate / 또는 python manage.py migrate --fake
-
 class RawdataKrwAda(models.Model):
     date_time = models.DateTimeField(primary_key=True)  # primary_key가 db에 설정이 안되어있는 경우 직접 입력해야 함
     date_time_last = models.DateTimeField(blank=True, null=True)
@@ -65,5 +89,27 @@ class RawdataKrwAda(models.Model):
         managed = False
         db_table = 'rawdata_krw-ada'
 
+
+# 기존 db 테이블 복사:
+# 1. sql 실행
+# (sql) CREATE TABLE test.`rawdata_krw-1inch` LIKE coinanser.`rawdata_krw-1inch`;
+# (sql) INSERT INTO test.`rawdata_krw-1inch` SELECT * FROM coinanser.`rawdata_krw-1inch`;
+# 2. table 생성
+# python manage.py inspectdb, 복사 붙여넣기
+# python manage.py makemigrations
+# python manage.py migrate
+class RawdataKrw1Inch(models.Model):
+    date_time = models.DateTimeField(primary_key=True)
+    date_time_last = models.DateTimeField(blank=True, null=True)
+    opening_price = models.FloatField(blank=True, null=True)
+    high_price = models.FloatField(blank=True, null=True)
+    low_price = models.FloatField(blank=True, null=True)
+    trade_price = models.FloatField(blank=True, null=True)
+    candle_acc_trade_price = models.FloatField(blank=True, null=True)
+    candle_acc_trade_volume = models.FloatField(blank=True, null=True)
+
+    class Meta:
+        managed = False
+        db_table = 'rawdata_krw-1inch'
 
 
