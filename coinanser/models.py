@@ -36,28 +36,25 @@ class Comment(models.Model):
     answer = models.ForeignKey(Answer, null=True, blank=True, on_delete=models.CASCADE)
 
 
-class TradeMonitering(models.Model):
-    trade_id = models.TextField(primary_key=True)  # 첫 거래요청 id
+class TradeResults(models.Model):
+    trade_id = models.CharField(primary_key=True, max_length=31)  # 첫 거래요청 id
     start_date_time = models.DateTimeField(db_index=True)  # 모델 예측 시각
-    predict_model = models.TextField()  # 예측모델 이름
+    predict_model = models.CharField(max_length=31)  # 예측모델 이름
     model_version = models.FloatField()  # 모델 버전
-    market = models.TextField()  # 마켓명
+    market = models.CharField(max_length=15)  # 마켓명
     bid_goal = models.FloatField()  # 목표 매수가격
     ask_goal = models.FloatField()  # 목표 매도가격
-
+    # 매수 진행
     bid_date_time = models.DateTimeField(blank=True, null=True)  # 최종 매수시각  # 예측값이 변경된 경우 취소
-    bid_mean = models.FloatField(blank=True, null=True)  # 실제 매수가격  # 목표가와 다른 경우 실패처리
-    bid_trade_price = models.FloatField(blank=True, null=True)  # 수수료 포함 매수금액
+    bid_price = models.FloatField(blank=True, null=True)  # 실제 매수가격  # 목표가와 다른 경우 실패처리
+    bid_volume = models.FloatField(blank=True, null=True)  # 매수 수량
+    bid_funds = models.FloatField(blank=True, null=True)  # 수수료 포함 매수금액
+    # 매도 진행
     ask_date_time = models.DateTimeField(blank=True, null=True)  # 최종 매도시각  # 시장가 5000원 이하면 지정가 매도
-    ask_mean = models.FloatField(blank=True, null=True)  # 실제 매도가격  # 목표가와 다른 경우 실패처리
-    ask_trade_price = models.FloatField(blank=True, null=True)  # 수수료 포함 매도금액
-    trade_volume = models.FloatField(blank=True, null=True)  # 최종 거래량
-    candle_acc_trade_volume = models.FloatField(blank=True, null=True)
-
-    class Meta:
-        managed = False
-        db_table = 'rawdata_krw-ada'
-# rawdata_2102 제거 가능여부 및 inspectdb index 확인해보고 start_date_time db_index 추가하기!
+    ask_price = models.FloatField(blank=True, null=True)  # 실제 매도가격  # 목표가와 다른 경우 실패처리
+    ask_volume = models.FloatField(blank=True, null=True)  # 매도 수량
+    ask_funds = models.FloatField(blank=True, null=True)  # 수수료 포함 매도금액
+    # django를 통해 생성하는 경우 class Meta 가 없어야 함
 
 
 # class RawData(models.Model):  # error - 테이블이 제대로 생성되지 않음 / 기존 DB를 복사하는 방식으로 진행해야 할 듯

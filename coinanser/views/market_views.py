@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from coinanser.upbit_quotation.get_rawdata import *
+from coinanser.upbit_api.get_quotation import *
 
 
 def market_data(request):

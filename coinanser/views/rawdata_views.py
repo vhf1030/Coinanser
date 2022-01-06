@@ -2,6 +2,7 @@ from django.shortcuts import render
 from coinanser.models import RawdataKrwAda
 # import json
 
+
 def select_test(request):
     # rawdata = RawdataKrwAda.objects.order_by('-date_time')[0:50]
     rawdata = RawdataKrwAda.objects.all()[0:200]
