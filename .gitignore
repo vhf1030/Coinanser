@@ -3,5 +3,5 @@ db.sqlite3
 *.pyc
 __pycache__
 my_setting/
-prediction_model/
+prediction_model/ML_models/
 dump_data*
