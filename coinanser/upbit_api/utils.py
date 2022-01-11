@@ -33,7 +33,9 @@ def datetime_convert(time_, to_str=True, to_utc=False, sec_delta=0, month_delta=
 
 
 UPBIT_PRICE_UNIT = {
-    0: 0.01,
+    0: 0.0001,
+    0.1: 0.001,
+    1: 0.01,
     10: 0.1,
     100: 1,
     1000: 5,

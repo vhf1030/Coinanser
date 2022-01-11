@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load coinanser_filter %}
+{% block content %}
+
+
+<div class="container my-3">
+<!--    <div class="row justify-content-between my-3">-->
+<!--        <div class="col-2">-->
+<!--            <select class="form-control so">-->
+<!--                <option value="recent" {% if so == 'recent' %}selected{% endif %}>최신순</option>-->
+<!--                <option value="recommend" {% if so == 'recommend' %}selected{% endif %}>추천순</option>-->
+<!--                <option value="popular" {% if so == 'popular' %}selected{% endif %}>답변순</option>-->
+<!--            </select>-->
+<!--        </div>-->
+<!--        <div class="col-4 input-group">-->
+<!--            <input type="text" class="form-control kw" value="{{ kw|default_if_none:'' }}">-->
+<!--            <div class="input-group-append">-->
+<!--                <button class="btn btn-outline-secondary" type="button" id="btn_search">검색</button>-->
+<!--            </div>-->
+<!--        </div>-->
+<!--    </div>-->
+    <table class="table table-sm">
+        <thead>
+        <tr class="text-center thead-dark " class="small">
+            <th>번호<br>마켓명</th>
+            <th>시작날짜<br>시작시간</th>
+            <th>매수시간<br>매도시간</th>
+            <th>매수목표<br>매도목표</th>
+            <th>매수가격<br>매도가격</th>
+            <th>매수금액<br>매도금액</th>
+            <th>수익금액<br>수익률</th>
+            <th>모델명<br>버전</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% if order_list %}
+        {% for order in order_list %}
+        <tr class="text-center" style="line-height:90%;">
+            <td><span class="small">
+                <!-- 번호 = 전체건수 - 시작인덱스 - 현재인덱스 + 1 -->
+                {{ order_list.paginator.count|sub:order_list.start_index|sub:forloop.counter0|add:1 }}<br>
+                {{ order.market }}
+            </span></td>
+            <td><span class="small">
+                {{ order.start_date_time|kor_dt_split:'date' }}<br>
+                {{ order.start_date_time|kor_dt_split:'time' }}
+            </span></td>
+            <td><span class="small">
+                {{ order.bid_date_time|kor_dt_split:'time' }}<br>
+                {{ order.ask_date_time|kor_dt_split:'time' }}
+            </span></td>
+            <td><span class="small">
+                {{ order.bid_goal }}<br>{{ order.ask_goal }}
+            </span></td>
+            <td><span class="small">
+                {{ order.bid_price|rnd:1 }}<br>{{ order.ask_price|rnd:1 }}
+            </span></td>
+            <td><span class="small">
+                {{ order.bid_funds|rnd:1 }}<br>{{ order.ask_funds|rnd:1 }}
+            </span></td>
+            <td>
+                <span class="small">{{ order.ask_funds|sub:order.bid_funds|rnd:1 }}<br></span>
+                {% if order.ask_funds|sub:order.bid_funds > 0 %}
+                <span class="small" style="font-weight: bold; color: red;">{{ order.ask_funds|sub:order.bid_funds|dvd:order.bid_funds|mtp:100|rnd:2 }}%</span>
+                {% else %}
+                <span class="small" style="font-weight: bold; color: blue;">{{ order.ask_funds|sub:order.bid_funds|dvd:order.bid_funds|mtp:100|rnd:2 }}%</span>
+                {% endif %}
+            </td>
+            <td><span class="small">{{ order.predict_model }}<br>{{ order.model_version }}</span></td>
+        </tr>
+        {% endfor %}
+        {% else %}
+        <tr>
+            <td colspan="3">질문이 없습니다.</td>
+        </tr>
+        {% endif %}
+        </tbody>
+    </table>
+    <!-- 페이징처리 시작 -->
+    <ul class="pagination justify-content-center">
+        <!-- 이전페이지 -->
+        {% if order_list.number > 3 %}
+        <li class="page-item">
+<!--            <a class="page-link" href="/coinanser/index/?page=1">처음</a>-->
+            <a class="page-link" data-page="1" href="#">처음</a>
+        </li>
+        <li class="page-item">
+<!--            <a class="page-link" href="?page={{ order_list.number|add:-3 }}">이전</a>-->
+            <a class="page-link" data-page="{{ page_start|add:-1 }}" href="#">이전</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">처음</a>
+        </li>
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">이전</a>
+        </li>
+        {% endif %}
+        <!-- 페이지리스트 -->
+        {% for page_number in order_list.paginator.page_range %}
+        {% if page_number >= page_start and page_number <= page_end %}
+            {% if page_number == order_list.number %}
+            <li class="page-item active" aria-current="page">
+<!--                <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>-->
+                <a class="page-link" data-page="{{ page_number }}" href="#">{{ page_number }}</a>
+            </li>
+            {% else %}
+            <li class="page-item">
+<!--                <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>-->
+                <a class="page-link" data-page="{{ page_number }}" href="#">{{ page_number }}</a>
+            </li>
+            {% endif %}
+        {% endif %}
+        {% endfor %}
+        <!-- 다음페이지 -->
+        {% if order_list.number < order_list_len|add:-2 %}
+        <li class="page-item">
+<!--            <a class="page-link" href="?page={{ order_list.number|add:3 }}">다음</a>-->
+            <a class="page-link" data-page="{{ page_end|add:1 }}" href="#">다음</a>
+        </li>
+        <li class="page-item">
+<!--            <a class="page-link" href="?page={{ order_list_len }}">마지막</a>-->
+            <a class="page-link" data-page="{{ order_list_len }}" href="#">마지막</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">다음</a>
+        </li>
+        <li class="page-item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">마지막</a>
+        </li>
+        {% endif %}
+    </ul>
+    <!-- 페이징처리 끝 -->
+    <!--li>
+        <span> {{ order_list }} </span>
+    </li-->
+</div>
+<form id="searchForm" method="get" action="{% url 'coinanser:order_board' %}">
+    <input type="hidden" id="page" name="page" value="{{ page }}">
+</form>
+
+{% endblock %}
+{% block script %}
+<script type='text/javascript'>
+$(document).ready(function(){
+    $(".page-link").on('click', function() {
+        $("#page").val($(this).data("page"));
+        $("#searchForm").submit();
+    });
+});
+</script>
+{% endblock %}

@@ -1,4 +1,5 @@
 from my_setting.config import PYMYSQL_CONNECT
+from coinanser.upbit_api.post_order import *
 import pymysql
 
 
@@ -12,23 +13,22 @@ conn = pymysql.connect(
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 
 
-def convert_result(trade_info, bid_info=False, ask_info=False):
+def convert_result(trade_info):
     trade_column = ['trade_id', 'start_date_time', 'predict_model', 'model_version', 'market', 'bid_goal', 'ask_goal']
     result = [trade_info[c] for c in trade_column]
-
-    if bid_info:
-        bid_date_time = bid_info['trades'][-1]['created_at'].split('+')[0]
-        bid_funds = sum([float(t['funds']) for t in bid_info['trades']])
-        bid_volume = sum([float(t['volume']) for t in bid_info['trades']])
-        bid_price = bid_funds / bid_volume
+    if 'bid_parsed' in trade_info:
+        bid_date_time = trade_info['bid_parsed']['last_time']
+        bid_price = trade_info['bid_parsed']['price_mean']
+        bid_volume = trade_info['bid_parsed']['volume_sum']
+        bid_funds = trade_info['bid_parsed']['fund_cons_fee']
         result.extend([bid_date_time, bid_price, bid_volume, bid_funds])
     else:
         result.extend([None, None, None, None])
-    if ask_info:
-        ask_date_time = ask_info['trades'][-1]['created_at'].split('+')[0]
-        ask_funds = sum([float(t['funds']) for t in ask_info['trades']])
-        ask_volume = sum([float(t['volume']) for t in ask_info['trades']])
-        ask_price = ask_funds / ask_volume
+    if 'ask_parsed' in trade_info:
+        ask_date_time = trade_info['ask_parsed']['last_time']
+        ask_price = trade_info['ask_parsed']['price_mean']
+        ask_volume = trade_info['ask_parsed']['volume_sum']
+        ask_funds = trade_info['ask_parsed']['fund_cons_fee']
         result.extend([ask_date_time, ask_price, ask_volume, ask_funds])
     else:
         result.extend([None, None, None, None])

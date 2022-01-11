@@ -1,6 +1,7 @@
 import markdown
 from django import template
 from django.utils.safestring import mark_safe
+from coinanser.upbit_api.utils import datetime_convert
 
 register = template.Library()
 
@@ -8,6 +9,21 @@ register = template.Library()
 @register.filter()
 def sub(value, arg):
     return value - arg
+
+
+@register.filter()
+def dvd(value, arg):
+    return value / arg
+
+
+@register.filter()
+def mtp(value, arg):
+    return value * arg
+
+
+@register.filter()
+def rnd(value, arg):
+    return round(value, arg)
 
 
 @register.filter()
@@ -44,4 +60,15 @@ def get_min(li):
 @register.filter()
 def get_max(li):
     return max(li)
+
+
+@register.filter()
+def kor_dt_split(dt, arg):
+    dc = datetime_convert(dt, to_str=False)
+    if arg == 'date':
+        return str(dc.date())
+    if arg == 'time':
+        return str(dc.time())
+
+
 

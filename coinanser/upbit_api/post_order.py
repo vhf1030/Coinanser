@@ -132,4 +132,21 @@ def view_order(identifier_, delete=False):
 # #  'volume': '0.00018964'}
 
 
+def order_parser(identifier_):
+    if identifier_['state'] != 'done':
+        print('warning: 완료되지 않은 주문입니다.')
+    fund_sum = sum([float(t['funds']) for t in identifier_['trades']])
+    volume_sum = sum([float(t['volume']) for t in identifier_['trades']])
+    price_mean = fund_sum / volume_sum
+    paid_fee = float(identifier_['paid_fee']) if identifier_['side'] == 'bid' else -float(identifier_['paid_fee'])
+    fund_cons_fee = fund_sum + paid_fee
+    last_time = identifier_['trades'][-1]['created_at'].split('+')[0]
+    result = {
+        'fund_sum': fund_sum,
+        'volume_sum': volume_sum,
+        'price_mean': price_mean,
+        'fund_cons_fee': fund_cons_fee,
+        'last_time': last_time,
+    }
+    return result
 

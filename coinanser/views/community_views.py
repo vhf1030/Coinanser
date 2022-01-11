@@ -38,7 +38,6 @@ def question_board(request):
     page_start = max(1, page_obj.number - max(2, page_obj.number - page_len + 4))
     page_end = min(page_len, page_obj.number + max(2, 5 - page_obj.number))
 
-
     context = {
         'question_list': page_obj,
         'question_list_len': page_len,
