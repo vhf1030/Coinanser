@@ -22,8 +22,10 @@ def get_market_all(krw=True, print_=True):
         print('market 수:', len(market_dict))
         print('markets:', ', '.join([market_dict[market]['korean_name'] for market in market_dict]))
     return market_dict
-# market_all = get_market_all()
-# pprint(market_all)
+
+
+MARKET_ALL = get_market_all()
+# pprint(MARKET_ALL)
 
 
 # def get_candles_minutes(market_, time_to_=False, min_=1, count_=200, sleep_=0.1):

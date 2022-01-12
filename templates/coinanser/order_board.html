@@ -22,7 +22,8 @@
     <table class="table table-sm">
         <thead>
         <tr class="text-center thead-dark " class="small">
-            <th>번호<br>마켓명</th>
+            <th>번호<br>상태</th>
+            <th>코인명<br>마켓</th>
             <th>시작날짜<br>시작시간</th>
             <th>매수시간<br>매도시간</th>
             <th>매수목표<br>매도목표</th>
@@ -36,37 +37,51 @@
         {% if order_list %}
         {% for order in order_list %}
         <tr class="text-center" style="line-height:90%;">
-            <td><span class="small">
+            <td>
                 <!-- 번호 = 전체건수 - 시작인덱스 - 현재인덱스 + 1 -->
-                {{ order_list.paginator.count|sub:order_list.start_index|sub:forloop.counter0|add:1 }}<br>
-                {{ order.market }}
-            </span></td>
-            <td><span class="small">
-                {{ order.start_date_time|kor_dt_split:'date' }}<br>
-                {{ order.start_date_time|kor_dt_split:'time' }}
-            </span></td>
-            <td><span class="small">
-                {{ order.bid_date_time|kor_dt_split:'time' }}<br>
-                {{ order.ask_date_time|kor_dt_split:'time' }}
-            </span></td>
-            <td><span class="small">
-                {{ order.bid_goal }}<br>{{ order.ask_goal }}
-            </span></td>
-            <td><span class="small">
-                {{ order.bid_price|rnd:1 }}<br>{{ order.ask_price|rnd:1 }}
-            </span></td>
-            <td><span class="small">
-                {{ order.bid_funds|rnd:1 }}<br>{{ order.ask_funds|rnd:1 }}
-            </span></td>
+                <span class="small">{{ order_list.paginator.count|sub:order_list.start_index|sub:forloop.counter0|add:1 }}<br></span>
+                {% if order.ask_date_time %}
+                <span class="small">완료</span>
+                {% else %}{% if order.bid_date_time %}
+                <span class="small" style="font-weight: bold; color: orange;">진행</span>
+                {% else %}
+                <span class="small" style="font-weight: bold; color: green;">대기</span>
+                {% endif %}{% endif %}
+            </td>
+            <td>
+                <span class="small">{{ order.market|market_info:'korean_name' }}<br></span>
+                <span class="small" style="font-weight: bold;">
+                    <a href="#" onClick="window.open('{% url 'coinanser:market_data' %}?market={{ order.market }}&unit=1')">
+                        {{ order.market }}
+                    </a>
+                </span>
+            </td>
+            <td>
+                <span class="small">{{ order.start_date_time|kor_dt_split:'date' }}<br>{{ order.start_date_time|kor_dt_split:'time' }}</span>
+            </td>
+            <td>
+                <span class="small">{{ order.bid_date_time|kor_dt_split:'time' }}<br>{{ order.ask_date_time|kor_dt_split:'time' }}</span>
+            </td>
+            <td>
+                <span class="small">{{ order.bid_goal }}<br>{{ order.ask_goal }}</span>
+            </td>
+            <td>
+                <span class="small">{{ order.bid_price|rnd:1 }}<br>{{ order.ask_price|rnd:1 }}</span>
+            </td>
+            <td>
+                <span class="small">{{ order.bid_funds|rnd:1 }}<br>{{ order.ask_funds|rnd:1 }}</span>
+            </td>
             <td>
                 <span class="small">{{ order.ask_funds|sub:order.bid_funds|rnd:1 }}<br></span>
                 {% if order.ask_funds|sub:order.bid_funds > 0 %}
-                <span class="small" style="font-weight: bold; color: red;">{{ order.ask_funds|sub:order.bid_funds|dvd:order.bid_funds|mtp:100|rnd:2 }}%</span>
+                <span class="small" style="font-weight: bold; color: red;">{{ order.ask_funds|sub:order.bid_funds|dvd:order.bid_funds|pct_rnd:2 }}</span>
                 {% else %}
-                <span class="small" style="font-weight: bold; color: blue;">{{ order.ask_funds|sub:order.bid_funds|dvd:order.bid_funds|mtp:100|rnd:2 }}%</span>
+                <span class="small" style="font-weight: bold; color: blue;">{{ order.ask_funds|sub:order.bid_funds|dvd:order.bid_funds|pct_rnd:2 }}</span>
                 {% endif %}
             </td>
-            <td><span class="small">{{ order.predict_model }}<br>{{ order.model_version }}</span></td>
+            <td>
+                <span class="small">{{ order.predict_model }}<br>{{ order.model_version }}</span>
+            </td>
         </tr>
         {% endfor %}
         {% else %}

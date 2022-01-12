@@ -13,7 +13,7 @@ conn = pymysql.connect(
 cursor = conn.cursor(pymysql.cursors.DictCursor)
 
 
-def convert_result(trade_info):
+def upsert_trade_result(trade_info):
     trade_column = ['trade_id', 'start_date_time', 'predict_model', 'model_version', 'market', 'bid_goal', 'ask_goal']
     result = [trade_info[c] for c in trade_column]
     if 'bid_parsed' in trade_info:
@@ -32,21 +32,32 @@ def convert_result(trade_info):
         result.extend([ask_date_time, ask_price, ask_volume, ask_funds])
     else:
         result.extend([None, None, None, None])
-    return tuple([str(r) for r in result])
 
-
-def insert_trade_result(values):
+    values = tuple([str(r) if r else r for r in result + result[-8:]])
+    # command = 'INSERT INTO ' if not update else 'UPDATE '
+    # sql = command + """
     sql = """
     INSERT INTO `coinanser_traderesults` (
         trade_id, start_date_time, predict_model, model_version, market, bid_goal, ask_goal,
         bid_date_time, bid_price, bid_volume, bid_funds,
         ask_date_time, ask_price, ask_volume, ask_funds
-    ) VALUES (%s)
-    """ % ("'" + "', '".join(values) + "'")
+    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    ON DUPLICATE KEY UPDATE
+        bid_date_time=%s, bid_price=%s, bid_volume=%s, bid_funds=%s,
+        ask_date_time=%s, ask_price=%s, ask_volume=%s, ask_funds=%s
+    """
+    cursor.execute(sql, values)
+    conn.commit()
+    return
+    # """ % ("'" + "', '".join(values) + "'")
+
+
+def delete_trade_result(trade_id):
+    sql = """
+    DELETE FROM `coinanser_traderesults`
+    WHERE trade_id = '%s'
+    """ % trade_id
     cursor.execute(sql)
     conn.commit()
     return
-
-
-
 

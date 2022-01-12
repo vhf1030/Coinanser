@@ -2,27 +2,43 @@ import markdown
 from django import template
 from django.utils.safestring import mark_safe
 from coinanser.upbit_api.utils import datetime_convert
+from coinanser.upbit_api.get_quotation import MARKET_ALL
 
 register = template.Library()
 
 
 @register.filter()
 def sub(value, arg):
+    if value in (None, ''):
+        return ''
     return value - arg
 
 
 @register.filter()
 def dvd(value, arg):
+    if value in (None, ''):
+        return ''
     return value / arg
 
 
 @register.filter()
 def mtp(value, arg):
+    if value in (None, ''):
+        return ''
     return value * arg
 
 
 @register.filter()
+def pct_rnd(value, arg):
+    if value in (None, ''):
+        return ''
+    return str(round(value * 100, arg)) + '%'
+
+
+@register.filter()
 def rnd(value, arg):
+    if value in (None, ''):
+        return ''
     return round(value, arg)
 
 
@@ -64,6 +80,8 @@ def get_max(li):
 
 @register.filter()
 def kor_dt_split(dt, arg):
+    if dt in (None, ''):
+        return ''
     dc = datetime_convert(dt, to_str=False)
     if arg == 'date':
         return str(dc.date())
@@ -71,4 +89,7 @@ def kor_dt_split(dt, arg):
         return str(dc.time())
 
 
+@register.filter()
+def market_info(market, arg):
+    return MARKET_ALL[market][arg]
 
