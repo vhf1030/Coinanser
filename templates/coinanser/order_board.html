@@ -2,7 +2,64 @@
 {% load coinanser_filter %}
 {% block content %}
 
+<html>
+  <head>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['bar', 'corechart']});
+      google.charts.setOnLoadCallback(drawStuff);
 
+    function drawStuff() {
+
+      var data = new google.visualization.DataTable();
+      data.addColumn('date', '날짜');
+      data.addColumn('number', '수익금액');
+      data.addColumn({type: 'string', role: 'tooltip'});
+
+      data.addRows([
+      {% for summary in summary_list %}
+        [
+          new Date("{{ summary.date }}"),
+          {{ summary.ask_funds__sum|sub:summary.bid_funds__sum }},
+          '매수금액: {{summary.bid_funds__sum}} \n 매도금액: {{summary.ask_funds__sum}} \n 수익률: {{ summary.ask_funds__sum|sub:summary.bid_funds__sum|dvd:summary.bid_funds__sum|pct_rnd:3 }}',
+        ],
+      {% endfor %}
+      ])
+
+
+      var options = {
+
+        chartArea: {
+          left: '9.5%',
+          width: '76%',
+          height: '70%'
+        },
+        bar: { groupWidth: '80%' },
+        vAxis: {
+          title: 'KRW',
+          format: 'decimal',
+          gridlines: {count: 1.5}, //
+          titleTextStyle: {italic: false}, //
+        },
+        hAxis: {
+          format: 'yy/M/d H:mm',
+          gridlines: {count: 3},
+        },
+      };
+
+      // tooltip 추가 예정
+      var chart = new google.visualization.ColumnChart(document.getElementById('top_x_div'));
+      chart.draw(data, options);
+    };
+    </script>
+  </head>
+</html>
+<div class="container my-3">
+    <div class="row justify-content-between">
+        <span>날짜별 요약</span>
+        <span class="small">마지막 주문완료: {{ order_last }} &nbsp;</span>
+        <div id="top_x_div" style="width: 100%; height: 250px"></div>
+    </div>
+</div>
 <div class="container my-3">
 <!--    <div class="row justify-content-between my-3">-->
 <!--        <div class="col-2">-->
@@ -86,7 +143,7 @@
         {% endfor %}
         {% else %}
         <tr>
-            <td colspan="3">질문이 없습니다.</td>
+            <td colspan="3">거래 내역이 없습니다.</td>
         </tr>
         {% endif %}
         </tbody>
