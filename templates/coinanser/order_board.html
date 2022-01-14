@@ -13,14 +13,14 @@
       var data = new google.visualization.DataTable();
       data.addColumn('date', '날짜');
       data.addColumn('number', '수익금액');
-      data.addColumn({type: 'string', role: 'tooltip'});
+      data.addColumn({type: 'string', role: 'tooltip', p: {html: true}});
 
       data.addRows([
       {% for summary in summary_list %}
         [
           new Date("{{ summary.date }}"),
-          {{ summary.ask_funds__sum|sub:summary.bid_funds__sum }},
-          '매수금액: {{summary.bid_funds__sum}} \n 매도금액: {{summary.ask_funds__sum}} \n 수익률: {{ summary.ask_funds__sum|sub:summary.bid_funds__sum|dvd:summary.bid_funds__sum|pct_rnd:3 }}',
+          {{ summary.rev_funds }},
+          '{{ summary.tooltip }}',
         ],
       {% endfor %}
       ])
@@ -120,16 +120,16 @@
                 <span class="small">{{ order.bid_date_time|kor_dt_split:'time' }}<br>{{ order.ask_date_time|kor_dt_split:'time' }}</span>
             </td>
             <td>
-                <span class="small">{{ order.bid_goal }}<br>{{ order.ask_goal }}</span>
+                <span class="small">{{ order.bid_goal|num_comma }}<br>{{ order.ask_goal|num_comma }}</span>
             </td>
             <td>
-                <span class="small">{{ order.bid_price|rnd:1 }}<br>{{ order.ask_price|rnd:1 }}</span>
+                <span class="small">{{ order.bid_price|sig_fig5|num_comma }}<br>{{ order.ask_price|sig_fig5|num_comma }}</span>
             </td>
             <td>
-                <span class="small">{{ order.bid_funds|rnd:1 }}<br>{{ order.ask_funds|rnd:1 }}</span>
+                <span class="small">{{ order.bid_funds|sig_fig5|num_comma }}<br>{{ order.ask_funds|sig_fig5|num_comma }}</span>
             </td>
             <td>
-                <span class="small">{{ order.ask_funds|sub:order.bid_funds|rnd:1 }}<br></span>
+                <span class="small">{{ order.ask_funds|sub:order.bid_funds|sig_fig5 }}<br></span>
                 {% if order.ask_funds|sub:order.bid_funds > 0 %}
                 <span class="small" style="font-weight: bold; color: red;">{{ order.ask_funds|sub:order.bid_funds|dvd:order.bid_funds|pct_rnd:2 }}</span>
                 {% else %}

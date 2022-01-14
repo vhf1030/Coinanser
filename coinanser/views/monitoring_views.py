@@ -28,6 +28,19 @@ def order_board(request):
                                       start_date_time__lt=s_datetime + timedelta(days=1))  # <
         summary['count'] = query_set.count()
         summary.update(query_set.aggregate(Sum('bid_funds'), Sum('ask_funds')))
+        if summary['count']:
+            summary['rev_funds'] = summary['ask_funds__sum'] - summary['bid_funds__sum']
+            summary['rev_ratio'] = summary['rev_funds'] / summary['bid_funds__sum']
+            summary['tooltip'] = ('수익금액: ' + str(format(round(summary['rev_funds']), ',')) + '원' +
+                                  '\\n거래횟수: ' + str(round(summary['count'])) + '건' +
+                                  '\\n매수금액: ' + str(format(round(summary['bid_funds__sum']), ',')) + '원' +
+                                  '\\n매도금액: ' + str(format(round(summary['ask_funds__sum']), ',')) + '원' +
+                                  '\\n수익률: ' + str(round(summary['rev_ratio'] * 100, 2)) + '%')
+        else:
+            summary['rev_funds'] = None
+            summary['rev_ratio'] = None
+            summary['tooltip'] = None
+
         summary_list.append(summary)
         s_datetime += timedelta(days=1)
     order_last = datetime_convert(order_list.first().ask_date_time, to_str=False).strftime("%Y/%m/%d %H:%M:%S")

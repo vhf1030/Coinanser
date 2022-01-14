@@ -9,37 +9,55 @@ register = template.Library()
 
 @register.filter()
 def sub(value, arg):
-    if value in (None, ''):
+    if value in (None, '') or type(value) not in (int, float):
         return ''
     return value - arg
 
 
 @register.filter()
 def dvd(value, arg):
-    if value in (None, ''):
+    if value in (None, '') or type(value) not in (int, float):
         return ''
     return value / arg
 
 
 @register.filter()
 def mtp(value, arg):
-    if value in (None, ''):
+    if value in (None, '') or type(value) not in (int, float):
         return ''
     return value * arg
 
 
 @register.filter()
 def pct_rnd(value, arg):
-    if value in (None, ''):
+    if value in (None, '') or type(value) not in (int, float):
         return ''
     return str(round(value * 100, arg)) + '%'
 
 
 @register.filter()
 def rnd(value, arg):
-    if value in (None, ''):
+    if value in (None, '') or type(value) not in (int, float):
         return ''
     return round(value, arg)
+
+
+@register.filter()
+def sig_fig5(value):
+    if value in (None, '') or type(value) not in (int, float):
+        return ''
+    res = '%.5g' % value
+    if value < 10000:
+        return float(res)
+    else:
+        return int(float(res))
+
+
+@register.filter()
+def num_comma(value):
+    if value in (None, '') or type(value) not in (int, float):
+        return ''
+    return format(value, ',')
 
 
 @register.filter()

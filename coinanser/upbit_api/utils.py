@@ -63,4 +63,3 @@ def file_version_parser(path_):
     file, version = '_'.join(file_name.split('_')[:-1]), float(file_name.split('_')[-1])
     return file, version
 
-
