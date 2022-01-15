@@ -1,11 +1,13 @@
 from prediction_model.ML_models.tapering_hell.preprocessing import *
-# from coinanser.upbit_api.post_order import *
 from prediction_model.insert_db import *
+from coinanser.upbit_api.post_order import *
+from coinanser.upbit_api.get_quotation import *
 
-# gca = get_candles_api('KRW-ADA', time_to_='2021-01-03T21:54:00')
-# cr = candles_refine(gca)
-# check_stats(cr)
-# check_model(cr)
+
+gca = get_candles_api('KRW-ADA', time_to_='2021-01-03T21:54:00')
+cr = candles_refine(gca)
+check_stats(cr)
+check_model(cr)
 #
 # gca = get_candles_api('KRW-XRP')
 # cr = candles_refine(gca)

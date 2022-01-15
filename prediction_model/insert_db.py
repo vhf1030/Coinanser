@@ -1,5 +1,5 @@
 from my_setting.config import PYMYSQL_CONNECT
-from coinanser.upbit_api.post_order import *
+# from coinanser.upbit_api.post_order import *
 import pymysql
 
 
