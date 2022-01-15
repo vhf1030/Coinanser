@@ -5,3 +5,4 @@ __pycache__
 my_setting/
 prediction_model/ML_models/
 dump_data*
+static/jquery-ui-1.13.0.custom/
