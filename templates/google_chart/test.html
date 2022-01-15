@@ -1,0 +1,107 @@
+{% load static %}
+
+<html>
+  <head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+      google.charts.load('current', {'packages':['line']});
+      google.charts.setOnLoadCallback(drawChart);
+
+      // rawdata_views.py에서 data를 가져옴
+      // var context = JSON.parse("{{ contextJson|escapejs }}");
+      // var data_set = JSON.parse("{{ data_set }}");
+
+    function drawChart() {
+
+      var data = new google.visualization.DataTable();
+      data.addColumn('datetime', 'Day');
+      data.addColumn('number', 'A');
+      data.addColumn('number', 'B');
+      data.addColumn('number', 'C');
+
+      data.addRows([
+      {% for row in rawdata %}
+        [
+          new Date("{{ row.date_time|date:'c' }}"),
+          {{ row.high_price }},
+          {{ row.trade_price }},
+          {{ row.low_price }},
+        ],
+      {% endfor %}
+      ])
+
+      var options = {
+        chart: {
+          title: 'Box Office Earnings in First Two Weeks of Opening',
+          subtitle: 'in millions of dollars (USD)'
+        },
+        // width: 900,
+        // height: 500
+      };
+
+      var chart = new google.charts.Line(document.getElementById('linechart_material'));
+
+      chart.draw(data, google.charts.Line.convertOptions(options));
+    }
+    </script>
+  </head>
+  <body>
+    ** 하나의 template은 하나의 view에서만 인자를 전달받을 수 있는 것으로 보임<br>
+    -> html에 그래프가 출력되려면 base_view.index 에서 data를 받아와야 함<br><br>
+
+    <div id="linechart_material" style="width: 100%; height: 500px"></div>
+
+    <p>test1</p>
+    {% for r in test %}
+    {{ r.opening_price }}
+    {% endfor %}
+    <p>test2</p>
+    {% for r in test %}
+    "{{ r.date_time|date:'c' }}"
+    {% endfor %}
+    <p>test3</p>
+    {{ test }}
+
+  </body>
+
+</html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>XDSoft DateTimePicker Static Implementation</title>
+
+  <!-- jQuery -->
+  <script src="{% static 'jquery-3.6.0.min.js' %}"></script>
+
+  <!-- XDSoft DateTimePicker -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.min.css" integrity="sha256-DOS9W6NR+NFe1fUhEE0PGKY/fubbUCnOfTje2JMDw3Y=" crossorigin="anonymous" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.5.20/jquery.datetimepicker.full.min.js" integrity="sha256-FEqEelWI3WouFOo2VWP/uJfs1y8KJ++FLh2Lbqc8SJk=" crossorigin="anonymous"></script>
+</head>
+<body>
+<p>test4</p>
+<div style="text-align: center;">
+  <input id="datetimepicker" type="text">
+</div>
+<p>test5</p>
+<div  class=" date input-group" id="datetimepicker_id_datetime">
+  <input  class=" form-control" id="id_datetime" name="datetime" type="text" required/>
+</div>
+
+<script>
+  $(function () {
+    $("#datetimepicker").datetimepicker();
+  });
+</script>
+<script>(function () {
+  $(document).ready(function() {
+    $("#id_datetime").datetimepicker();
+  });
+})(jQuery);
+</script>
+
+</body>
+</html>
+
+
