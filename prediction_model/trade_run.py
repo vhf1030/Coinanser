@@ -2,15 +2,15 @@ from prediction_model.ML_models.tapering_hell.preprocessing import *
 # from coinanser.upbit_api.post_order import *
 from prediction_model.insert_db import *
 
-gca = get_candles_api('KRW-ADA', time_to_='2021-01-03T21:54:00')
-cr = candles_refine(gca)
-check_stats(cr)
-check_model(cr)
-
-gca = get_candles_api('KRW-XRP')
-cr = candles_refine(gca)
-check_stats(cr)
-check_model(cr)
+# gca = get_candles_api('KRW-ADA', time_to_='2021-01-03T21:54:00')
+# cr = candles_refine(gca)
+# check_stats(cr)
+# check_model(cr)
+#
+# gca = get_candles_api('KRW-XRP')
+# cr = candles_refine(gca)
+# check_stats(cr)
+# check_model(cr)
 
 
 def predict_market(market_, model_path_):
@@ -22,8 +22,8 @@ def predict_market(market_, model_path_):
         cr = candles_refine(gca)
     except ZeroDivisionError:
         return False, gca
-    # if not check_stats(cr):
-    #     return False
+    if not check_stats(cr):
+        return False, gca
     if check_stats(cr):
         print(gca[0]['date_time'], check_stats(cr), market_)
     return check_model(cr, model_path_), gca[0]
@@ -64,8 +64,6 @@ while True:
     #           '목표매수가:', market_status[market]['bid_goal'],
     #           '목표매도가:', market_status[market]['ask_goal'])
     for market in MARKET_ALL:
-        if market == 'KRW-BTT':
-            continue
         if market not in market_status:  # 예측 시작
             pm, gca0 = predict_market(market, model_path)
             if not pm or pm < 0.005:
@@ -84,7 +82,7 @@ while True:
             market_status[market]['bid_view'] = view_order(market_status[market]['bid_id'])
             if market_status[market]['bid_view']['state'] != 'done':
                 pm = predict_market(market, model_path)[0]
-                if pm and pm < -0.01:  # 매수 취소
+                if pm and pm < -0.005:  # 매수 취소
                     delete_view = view_order(market_status[market]['bid_id'], delete=True)
                     if 'error' not in delete_view:
                         print(datetime_convert(datetime.now()), 'bid_cancel:', market, '( predict:', pm, ')')
@@ -106,7 +104,7 @@ while True:
             market_status[market]['ask_view'] = view_order(market_status[market]['ask_id'])
             if market_status[market]['ask_view']['state'] != 'done':
                 pm = predict_market(market, model_path)[0]
-                if pm and pm < -0.01:  # 주문 취소 후 시장가 매도
+                if pm and pm < -0.005:  # 주문 취소 후 시장가 매도
                     delete_view = view_order(market_status[market]['ask_id'], delete=True)
                     if 'error' not in delete_view:
                         ask_volume = order_parser(market_status[market]['bid_view'])['volume_sum']

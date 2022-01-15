@@ -26,6 +26,7 @@ def order_board(request):
         summary = {'date': datetime_convert(s_datetime)}
         query_set = order_list.filter(start_date_time__gte=s_datetime,  # >=
                                       start_date_time__lt=s_datetime + timedelta(days=1))  # <
+        query_set = query_set.exclude(ask_date_time__isnull=True)
         summary['count'] = query_set.count()
         summary.update(query_set.aggregate(Sum('bid_funds'), Sum('ask_funds')))
         if summary['count']:
@@ -37,15 +38,15 @@ def order_board(request):
                                   '\\n매도금액: ' + str(format(round(summary['ask_funds__sum']), ',')) + '원' +
                                   '\\n수익률: ' + str(round(summary['rev_ratio'] * 100, 2)) + '%')
         else:
-            summary['rev_funds'] = None
-            summary['rev_ratio'] = None
+            summary['rev_funds'] = 0
+            summary['rev_ratio'] = 0
             summary['tooltip'] = None
 
         summary_list.append(summary)
         s_datetime += timedelta(days=1)
-    order_last = datetime_convert(order_list.first().ask_date_time, to_str=False).strftime("%Y/%m/%d %H:%M:%S")
+    order_last = datetime_convert(query_set.first().ask_date_time, to_str=False).strftime("%Y/%m/%d %H:%M:%S")
     # 페이징처리
-    paginator = Paginator(order_list, 20)  # 페이지당 20개씩 보여주기
+    paginator = Paginator(order_list, 10)  # 페이지당 10개씩 보여주기
     page_obj = paginator.get_page(page)
     page_len = paginator.num_pages
     page_start = max(1, page_obj.number - max(2, page_obj.number - page_len + 4))
