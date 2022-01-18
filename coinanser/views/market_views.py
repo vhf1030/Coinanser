@@ -49,26 +49,52 @@ def market_data(request):
     gca = get_candles_api(market, unit_=unit,  # count_=show_count,
                           time_to_=datetime_convert(datetime.strptime(endtime, "%Y/%m/%d %H:%M"), sec_delta=60))
     date_time_last = datetime_convert(gca[0]['date_time_last'], to_str=False).strftime("%Y/%m/%d %H:%M:%S")
+    print(date_time_last)
+    # rev_gca = reversed(gca)
+    # # mean_price, check = [], 1
+    # # for d in gca:
+    # #     if d['candle_acc_trade_volume'] == 0:  # 거래량이 0인 경우 평균가격 계산 에러
+    # #         check += 1
+    # #     else:
+    # #         mp = [d['candle_acc_trade_price'] / d['candle_acc_trade_volume']]
+    # #         mean_price.extend(mp * check)
+    # #         check = 1
+    # mean_price = []
+    # for d in rev_gca:
+    #     if d['candle_acc_trade_volume'] == 0:  # 거래량이 0인 경우 평균가격 계산 에러
+    #         mp = mean_price[-1]
+    #     else:
+    #         mp = d['candle_acc_trade_price'] / d['candle_acc_trade_volume']
+    #     mean_price.append(mp)
+    # mean_price.reverse()
 
     rev_gca = reversed(gca)
-    mean_price, check = [], 1
+    unit_price_list = []
     for d in rev_gca:
-        if d['candle_acc_trade_volume'] == 0:  # 거래량이 0인 경우 평균가격 계산 에러
-            mp = mean_price[-1]
-        else:
-            mp = d['candle_acc_trade_price'] / d['candle_acc_trade_volume']
-        mean_price.append(mp)
-    mean_price.reverse()
-    # for d in gca:
-    #     if d['candle_acc_trade_volume'] == 0:  # 거래량이 0인 경우 평균가격 계산 에러
-    #         check += 1
-    #     else:
-    #         mp = [d['candle_acc_trade_price'] / d['candle_acc_trade_volume']]
-    #         mean_price.extend(mp * check)
-    #         check = 1
+        unit_price = {
+            'date_time': d['date_time'],
+            'high_price': d['high_price'],
+            'low_price': d['low_price'],
+            'trade_price_account': d['candle_acc_trade_price'],
+            'mean_price': d['candle_acc_trade_price'] / d['candle_acc_trade_volume'] if d['candle_acc_trade_volume'] else unit_price_list[-1]['mean_price'],
+        }
+        unit_price['tooltip'] = (
+                '거래시간: ' + datetime_convert(unit_price['date_time'], to_str=False).strftime("%Y/%m/%d %H:%M:%S") +
+                '\\n고가: ' + str(sig_fig5(unit_price['high_price'])) + '원' +
+                '\\n평균: ' + str(sig_fig5(unit_price['mean_price'])) + '원' +
+                '\\n저가: ' + str(sig_fig5(unit_price['low_price'])) + '원' +
+                '\\n거래금액: ' + format(round(unit_price['trade_price_account']), ',') + '원'
+        )
+        unit_price_list.append(unit_price)
+    unit_price_list.reverse()
+
+    # if type(show_count) == int and len(gca) > show_count:
+    #     gca = gca[:show_count]
+    #     mean_price = mean_price[:show_count]
     if type(show_count) == int and len(gca) > show_count:
-        gca = gca[:show_count]
-        mean_price = mean_price[:show_count]
+        unit_price_list = unit_price_list[:show_count]
+    min_chart = min([up['low_price'] for up in unit_price_list])
+    max_chart = max([up['high_price'] for up in unit_price_list])
 
     context = {
         # 'data_set': data_set,
@@ -81,13 +107,16 @@ def market_data(request):
         'show_count_str': show_count_str,
         'show_count': show_count,
         'endtime': endtime,
-        'date_time': [d['date_time'] for d in gca],
+        # 'date_time': [d['date_time'] for d in gca],  #
         'date_time_last': date_time_last,
-        'high_price': [d['high_price'] for d in gca],
-        'mean_price': mean_price,
-        'low_price': [d['low_price'] for d in gca],
-        'trade_price_account': [d['candle_acc_trade_price'] for d in gca],
+        # 'high_price': [d['high_price'] for d in gca],  #
+        # 'mean_price': mean_price,  #
+        # 'low_price': [d['low_price'] for d in gca],  #
+        # 'trade_price_account': [d['candle_acc_trade_price'] for d in gca],
         'data_len': len(gca),
+        'unit_price_list': unit_price_list,
+        'min_chart': min_chart,
+        'max_chart': max_chart,
     }
     return render(request, 'coinanser/market_chart.html', context)
 

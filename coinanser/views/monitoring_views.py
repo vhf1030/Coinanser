@@ -22,13 +22,13 @@ def order_board(request):
     s_datetime = datetime.combine(order_list.last().start_date_time.date(), datetime.min.time())
     e_datetime = datetime.combine(order_list.first().start_date_time.date(), datetime.min.time())
     summary_list = []
+    query_set = order_list.exclude(ask_date_time__isnull=True)
     while s_datetime <= e_datetime:
         summary = {'date': datetime_convert(s_datetime)}
-        query_set = order_list.filter(start_date_time__gte=s_datetime,  # >=
-                                      start_date_time__lt=s_datetime + timedelta(days=1))  # <
-        query_set = query_set.exclude(ask_date_time__isnull=True)
-        summary['count'] = query_set.count()
-        summary.update(query_set.aggregate(Sum('bid_funds'), Sum('ask_funds')))
+        query_set_day = query_set.filter(start_date_time__gte=s_datetime,  # >=
+                                         start_date_time__lt=s_datetime + timedelta(days=1))  # <
+        summary['count'] = query_set_day.count()
+        summary.update(query_set_day.aggregate(Sum('bid_funds'), Sum('ask_funds')))
         if summary['count']:
             summary['rev_funds'] = summary['ask_funds__sum'] - summary['bid_funds__sum']
             summary['rev_ratio'] = summary['rev_funds'] / summary['bid_funds__sum']
@@ -45,6 +45,7 @@ def order_board(request):
         summary_list.append(summary)
         s_datetime += timedelta(days=1)
     order_last = datetime_convert(query_set.first().ask_date_time, to_str=False).strftime("%Y/%m/%d %H:%M:%S")
+
     # 페이징처리
     paginator = Paginator(order_list, 10)  # 페이지당 10개씩 보여주기
     page_obj = paginator.get_page(page)

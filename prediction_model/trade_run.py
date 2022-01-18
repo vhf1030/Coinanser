@@ -4,10 +4,10 @@ from coinanser.upbit_api.post_order import *
 from coinanser.upbit_api.get_quotation import *
 
 
-gca = get_candles_api('KRW-ADA', time_to_='2021-01-03T21:54:00')
-cr = candles_refine(gca)
-check_stats(cr)
-check_model(cr)
+# gca = get_candles_api('KRW-ADA', time_to_='2021-01-03T21:54:00')
+# cr = candles_refine(gca)
+# check_stats(cr)
+# check_model(cr)
 #
 # gca = get_candles_api('KRW-XRP')
 # cr = candles_refine(gca)
@@ -24,7 +24,7 @@ def predict_market(market_, model_path_):
         cr = candles_refine(gca)
     except ZeroDivisionError:
         return False, gca
-    if not check_stats(cr):
+    if not check_stats(cr):  # 기준 조정 필요
         return False, gca
     if check_stats(cr):
         print(gca[0]['date_time'], check_stats(cr), market_)
@@ -71,6 +71,8 @@ while True:
             if not pm or pm < 0.005:
                 continue
             rmt = run_model_trade(market, gca0, model_path)
+            if rmt['ask_goal']/rmt['bid_goal'] > 1 + pm:
+                continue
             market_status[market] = rmt
             bid_price = market_status[market]['bid_goal']
             bid_volume = round(bid_funds / bid_price, 8)

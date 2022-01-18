@@ -63,3 +63,12 @@ def file_version_parser(path_):
     file, version = '_'.join(file_name.split('_')[:-1]), float(file_name.split('_')[-1])
     return file, version
 
+
+def sig_fig5(value):
+    if value in (None, '') or type(value) not in (int, float):
+        return ''
+    res = '%.5g' % value
+    if value < 10000:
+        return float(res)
+    else:
+        return int(float(res))

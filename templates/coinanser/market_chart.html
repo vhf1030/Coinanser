@@ -15,21 +15,26 @@
 
       var data = new google.visualization.DataTable();
       data.addColumn('datetime');
-      data.addColumn('number', '최고');
+      data.addColumn('number', '고가');
+      data.addColumn({type: 'string', role: 'tooltip'});
       data.addColumn('number', '평균');
-      data.addColumn('number', '최저');
+      data.addColumn({type: 'string', role: 'tooltip'});
+      data.addColumn('number', '저가');
+      data.addColumn({type: 'string', role: 'tooltip'});
 
       data.addRows([
-      {% for row in data_len|ranges %}
+      {% for unit in unit_price_list %}
         [
-          new Date("{{ date_time|get_idx:row }}"),
-          {{ high_price|get_idx:row }},
-          {{ mean_price|get_idx:row }},
-          {{ low_price|get_idx:row }},
+          new Date("{{ unit.date_time }}"),
+          {{ unit.high_price }},
+          '{{ unit.tooltip }}',
+          {{ unit.mean_price }},
+          '{{ unit.tooltip }}',
+          {{ unit.low_price }},
+          '{{ unit.tooltip }}',
         ],
       {% endfor %}
       ])
-
 
       var options = {
         chart: {
@@ -38,14 +43,13 @@
         },
         vAxis: {
           title: 'KRW (log scale)',
-          format: 'decimal',
-          widths: 100,
+          // format: 'decimal',
           scaleType: 'log', //
           gridlines: {count: 1.5}, //
           titleTextStyle: {italic: false}, //
           viewWindow: {
-            min: {{ low_price|get_min }},
-            max: {{ high_price|get_max }},
+            min: {{ min_chart }},
+            max: {{ max_chart }},
           },
         },
         hAxis: {
@@ -92,12 +96,14 @@
       var data = new google.visualization.DataTable();
       data.addColumn('datetime', 'Time');
       data.addColumn('number', '거래금액');
+      data.addColumn({type: 'string', role: 'tooltip'});
 
       data.addRows([
-      {% for row in data_len|ranges %}
+      {% for unit in unit_price_list %}
         [
-          new Date("{{ date_time|get_idx:row }}"),
-          {{ trade_price_account|get_idx:row }},
+          new Date("{{ unit.date_time }}"),
+          {{ unit.trade_price_account }},
+          '{{ unit.tooltip }}',
         ],
       {% endfor %}
       ])
@@ -111,7 +117,6 @@
         vAxis: {
           title: 'KRW (log scale)',
           format: 'short',
-          widths: 100,
           scaleType: 'log', //
           gridlines: { count: 1.5 }, //
           titleTextStyle: { italic: false }, //
@@ -180,23 +185,21 @@
 <!--            <div class="container small" style="display: flex;">-->
 <!--                <p style="width: 20%;">기준시각:</p>-->
 <!--                <input class="form-control datetime" style="height: 20px; width: 150px;" type="text" value="{{ endtime }}" />-->
-
-                <span class="small">기준시각:</span>
-                <input class="form-control datetime" style="height: 30px; width: 150px;" type="text" value="{{ endtime }}" />
-                <form name="currentForm" method="get" action="">
-                    <input type="hidden" name="market_kw" value="{{ market_kw }}">
-                    <input type="hidden" name="market" value="{{ market }}">
-                    <input type="hidden" name="unit" value="{{ unit }}">
-                    <input type="hidden" name="show_count" value="{{ show_count }}">
-                    <button type="submit" class="btn btn-outline-secondary btn-sm" style="width: 150px;">현재시각</button>
-                </form>
-
+            <span class="small">기준시각:</span>
+            <input class="form-control datetime" style="height: 30px; width: 150px;" type="text" value="{{ endtime }}" />
+            <form name="currentForm" method="get" action="">
+                <input type="hidden" name="market_kw" value="{{ market_kw }}">
+                <input type="hidden" name="market" value="{{ market }}">
+                <input type="hidden" name="unit" value="{{ unit }}">
+                <input type="hidden" name="show_count" value="{{ show_count }}">
+                <button type="submit" class="btn btn-outline-secondary btn-sm" style="width: 150px;">현재시각</button>
+            </form>
         </div>
     </div>
 </div>
 
 <div class="container my-3">
-    <div class="row justify-content-between">
+    <div class="row justify-content-between my-3">
         <span>Mean price of {{ market_list|get_idx:market|get_idx:'english_name' }}</span>
         <span class="small">마지막 거래시각: {{ date_time_last }} &nbsp;</span>
         <div id="linechart_material" style="width: 100%; height: 400px"></div>
