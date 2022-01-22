@@ -56,8 +56,8 @@ def run_model_trade(market_, gca0_, model_path_):
 
 
 model_path = 'prediction_model/ML_models/tapering_hell/cuda_test_0.2.pt'
-market_status = {}
-bid_funds = 10000
+market_status = {}  # DB에서 가져오는 방법 구현 필요!
+bid_funds = 50000
 # market_all = get_market_all()
 while True:
     print('진행중:', ', '.join([k for k in market_status]))
@@ -109,6 +109,7 @@ while True:
             if market_status[market]['ask_view']['state'] != 'done':
                 pm = predict_market(market, model_path)[0]
                 if pm and pm < -0.005:  # 주문 취소 후 시장가 매도
+                # if (pm and pm < -0.005) or market == 'KRW-BTT':  # 강제 주문 취소 후 시장가 매도
                     delete_view = view_order(market_status[market]['ask_id'], delete=True)
                     if 'error' not in delete_view:
                         ask_volume = order_parser(market_status[market]['bid_view'])['volume_sum']

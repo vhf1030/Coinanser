@@ -129,7 +129,7 @@
                 <span class="small">{{ order.bid_funds|sig_fig5|num_comma }}<br>{{ order.ask_funds|sig_fig5|num_comma }}</span>
             </td>
             <td>
-                <span class="small">{{ order.ask_funds|sub:order.bid_funds|sig_fig5 }}<br></span>
+                <span class="small">{{ order.ask_funds|sub:order.bid_funds|rnd:1|sig_fig5|num_comma }}<br></span>
                 {% if order.ask_funds|sub:order.bid_funds > 0 %}
                 <span class="small" style="font-weight: bold; color: red;">{{ order.ask_funds|sub:order.bid_funds|dvd:order.bid_funds|pct_rnd:2 }}</span>
                 {% else %}

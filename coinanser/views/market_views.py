@@ -11,7 +11,8 @@ def market_data(request):
     unit_get = request.GET.get('unit', 'days')
     endtime_get = request.GET.get('endtime', '')  # str
     show_count_get = request.GET.get('show_count')
-    market_all = get_market_all(print_=False)
+    # market_all = get_market_all(print_=False)
+    market_all = MARKET_ALL
     market_search = {k: market_all[k] for k in market_all
                      if market_kw in market_all[k]['korean_name']
                      or market_kw in market_all[k]['english_name'].lower()
@@ -80,9 +81,9 @@ def market_data(request):
         }
         unit_price['tooltip'] = (
                 '거래시간: ' + datetime_convert(unit_price['date_time'], to_str=False).strftime("%Y/%m/%d %H:%M:%S") +
-                '\\n고가: ' + str(sig_fig5(unit_price['high_price'])) + '원' +
-                '\\n평균: ' + str(sig_fig5(unit_price['mean_price'])) + '원' +
-                '\\n저가: ' + str(sig_fig5(unit_price['low_price'])) + '원' +
+                '\\n고가: ' + format(sig_fig5(unit_price['high_price']), ',') + '원' +
+                '\\n평균: ' + format(sig_fig5(unit_price['mean_price']), ',') + '원' +
+                '\\n저가: ' + format(sig_fig5(unit_price['low_price']), ',') + '원' +
                 '\\n거래금액: ' + format(round(unit_price['trade_price_account']), ',') + '원'
         )
         unit_price_list.append(unit_price)
