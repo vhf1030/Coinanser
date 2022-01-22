@@ -108,7 +108,7 @@
             <td>
                 <span class="small">{{ order.market|market_info:'korean_name' }}<br></span>
                 <span class="small" style="font-weight: bold;">
-                    <a href="#" onClick="window.open('{% url 'coinanser:market_data' %}?market={{ order.market }}&unit=1')">
+                    <a href="#" onClick="window.open('{% url 'coinanser:market_data' %}?market={{ order.market }}&unit=1&show_count=50')">
                         {{ order.market }}
                     </a>
                 </span>

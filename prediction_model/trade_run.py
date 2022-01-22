@@ -97,7 +97,8 @@ while True:
             upsert_trade_result(market_status[market])  # DB update
             print(market_status[market]['bid_parsed']['last_time'], 'bid_done:', market, market_status[market]['bid_parsed']['price_mean'])
 
-            ask_price = market_status[market]['ask_goal']
+            # ask_price = market_status[market]['ask_goal']
+            ask_price = ceil_unit(market_status[market]['bid_parsed']['price_mean'] * 1.005)
             ask_volume = market_status[market]['bid_parsed']['volume_sum']
             ask_id = ask_order(market, price_=ask_price, volume_=ask_volume)  # 매도 시작
             print(datetime_convert(datetime.now()), 'ask_start:', market, ask_price, ask_id)
