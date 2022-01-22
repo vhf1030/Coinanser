@@ -109,8 +109,8 @@ while True:
             market_status[market]['ask_view'] = view_order(market_status[market]['ask_id'])
             if market_status[market]['ask_view']['state'] != 'done':
                 pm = predict_market(market, model_path)[0]
-                if pm and pm < -0.005:  # 주문 취소 후 시장가 매도
-                # if (pm and pm < -0.005) or market == 'KRW-BTT':  # 강제 주문 취소 후 시장가 매도
+                if pm and pm < -0.01:  # 주문 취소 후 시장가 매도
+                # if (pm and pm < -0.01) or market == 'KRW-BTT':  # 강제 주문 취소 후 시장가 매도
                     delete_view = view_order(market_status[market]['ask_id'], delete=True)
                     if 'error' not in delete_view:
                         ask_volume = order_parser(market_status[market]['bid_view'])['volume_sum']
