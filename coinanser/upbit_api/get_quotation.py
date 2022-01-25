@@ -80,7 +80,7 @@ MARKET_ALL = get_market_all()
 
 
 def get_candles_api(market_, time_to_=False, unit_=1, count_=200, sleep_=0.1, reverse_=True):
-    if unit_ not in [1, 3, 5, 15, 10, 30, 60, 240, 'days', 'weeks', 'months']:
+    if unit_ not in [1, 3, 5, 10, 15, 30, 60, 240, 'days', 'weeks', 'months']:
         print('incorrect unit')
         return False
     if type(unit_) == int:
