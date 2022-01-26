@@ -71,7 +71,7 @@ def select_rawdata(table_name, market, time_to_=False, count_=200):
     columns = RAWDATA_COLUMNS  # get_upbit_quotation 과 형식을 맞추기 위해 check_date_time 은 받아오지 않음
     sql = ("SELECT %s " % ', '.join(columns) +
            "FROM `test`.`%s`" % table_name +
-           "WHERE (candle_date_time_kst <= '%s' AND market = '%s')" % (time_to, market) +
+           "WHERE (candle_date_time_kst < '%s' AND market = '%s')" % (time_to, market) +
            "ORDER BY candle_date_time_kst ASC LIMIT %s;" % count_)
     cursor.execute(sql)
     selected = cursor.fetchall()
@@ -96,24 +96,24 @@ def select_rawdata(table_name, market, time_to_=False, count_=200):
 # ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
 # """
 #
-cursor.execute(sql, ['KRW-JST', '2022-01-25T06:15:00', '2022-01-25T15:15:00', 46.8, 46.8, 46.8, 46.8, 1643092535553, 24165.85084898, 516.36433438])
-conn.commit()
-
-sql = """
-INSERT INTO `rawdata_2201`
-VALUES (
-    %(market)s,
-    %(candle_date_time_utc)s,
-    %(candle_date_time_kst)s,
-    %(opening_price)s,
-    %(high_price)s,
-    %(low_price)s,
-    %(trade_price)s,
-    %(timestamp)s,
-    %(candle_acc_trade_price)s,
-    %(candle_acc_trade_volume)s
-    )
-"""
+# cursor.execute(sql, ['KRW-JST', '2022-01-25T06:15:00', '2022-01-25T15:15:00', 46.8, 46.8, 46.8, 46.8, 1643092535553, 24165.85084898, 516.36433438])
+# conn.commit()
+#
+# sql = """
+# INSERT INTO `rawdata_2201`
+# VALUES (
+#     %(market)s,
+#     %(candle_date_time_utc)s,
+#     %(candle_date_time_kst)s,
+#     %(opening_price)s,
+#     %(high_price)s,
+#     %(low_price)s,
+#     %(trade_price)s,
+#     %(timestamp)s,
+#     %(candle_acc_trade_price)s,
+#     %(candle_acc_trade_volume)s
+#     )
+# """
 
 
 

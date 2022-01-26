@@ -20,6 +20,8 @@ def get_market_all(krw=True, print_=True):
             market_dict.pop(md)
             continue
         market_dict[md]['symbol'] = market_tmp[1]
+        if market_dict[md]['market_warning'] != 'NONE':
+            print(md, '- market warning:', market_dict[md]['market_warning'])
     if print_:
         print('market 수:', len(market_dict))
         print('markets:', ', '.join([market_dict[market]['korean_name'] for market in market_dict]))
@@ -35,7 +37,7 @@ def get_upbit_quotation(market_, time_to_=False, unit_=1, count_=200, sleep_=0.1
         url = "https://api.upbit.com/v1/candles/minutes/" + str(unit_)
     if type(unit_) == str:
         url = "https://api.upbit.com/v1/candles/" + unit_ + "/"
-    to = datetime_convert(time_to_, to_str=False, to_utc=True, sec_delta=1) if time_to_ else ""
+    to = datetime_convert(time_to_, to_str=False, to_utc=True) if time_to_ else ""
     querystring = {"market": market_, "to": to, "count": str(count_)}
     headers = {"Accept": "application/json"}
     if sleep_:
@@ -49,48 +51,61 @@ def get_upbit_quotation(market_, time_to_=False, unit_=1, count_=200, sleep_=0.1
 # uq = get_upbit_quotation('KRW-JST', unit_=1, count_=200, sleep_=False)
 
 
-def prep_quotation(uq):
-    # market view(임시), training handler 에서 사용
-    check_time = uq[-1]['candle_date_time_kst']  # 먼 시점부터 현재 시점으로 진행
-    unit = uq[0]['unit']
-    min_delta = 60 * 24 if unit == 'days' else 60 * 24 * 7 if unit == 'weeks' else 0 if unit == 'months' else unit
+def refine_rawdata(rawdata):
+    # market view 에 사용(API/DB -> view), training handler 에서는 사용하지 않음
+    date_time = rawdata[-1]['candle_date_time_kst']  # 먼 시점부터 현재 시점으로 진행
+    unit = rawdata[0]['unit']
+    min_delta = (
+        0 if unit == 'months' else
+        60 * 24 * 7 if unit == 'weeks' else
+        60 * 24 if unit == 'days' else
+        unit
+    )
     month_delta = 1 if unit == 'months' else 0
-    cr_list = []
-    while uq:
-        if check_time == uq[-1]['candle_date_time_kst']:
-            cr_tmp = uq.pop()
-            cr_tmp['date_time'] = check_time
-            cr_tmp['date_time_last'] = datetime_convert(cr_tmp['timestamp'])
-            cr_tmp['mean_price'] = cr_tmp['candle_acc_trade_price'] / cr_tmp['candle_acc_trade_volume']
-            cr_list.append(cr_tmp)
-        else:  # 누락 시간 생성
-            cr_tmp = {
-                'date_time': check_time,
-                'date_time_last': cr_list[-1]['date_time_last'],
-                'opening_price': cr_list[-1]['trade_price'],
-                'high_price': cr_list[-1]['trade_price'],
-                'low_price': cr_list[-1]['trade_price'],
-                'trade_price': cr_list[-1]['trade_price'],
-                'mean_price': cr_list[-1]['trade_price'],
-                'candle_acc_trade_price': 0,
-                'candle_acc_trade_volume': 0,
-            }
-            cr_list.append(cr_tmp)
-        check_time = datetime_convert(check_time, sec_delta=60 * min_delta, month_delta=month_delta)
-    cr_list.reverse()  # 최근 시간부터 출력
-    return cr_list
-# uq = get_upbit_quotation('KRW-JST', time_to_='2022-01-25T17:42:01', unit_=1, count_=200, sleep_=False)
-# sr = select_rawdata(table_name, 'KRW-JST', time_to_='2022-01-25T17:42:01')
+    refdata_list = []
+    while rawdata:
+        if date_time == rawdata[-1]['candle_date_time_kst']:  # 데이터가 존재할 때
+            tmp = rawdata.pop()
+            date_time_last = datetime_convert(tmp['timestamp'])
+            opening_price = tmp['opening_price']
+            high_price = tmp['high_price']
+            low_price = tmp['low_price']
+            trade_price = tmp['trade_price']
+            mean_price = tmp['candle_acc_trade_price'] / tmp['candle_acc_trade_volume']
+            candle_acc_trade_price = tmp['candle_acc_trade_price']
+            candle_acc_trade_volume = tmp['candle_acc_trade_volume']
+        else:
+            opening_price, high_price, low_price, mean_price = trade_price, trade_price, trade_price, trade_price
+            candle_acc_trade_price, candle_acc_trade_volume = 0, 0
+        ref_tmp = {
+            'date_time': date_time,
+            'date_time_last': date_time_last,  # 데이터가 없는 경우 직전의 마지막 거래시간을 반영
+            'opening_price': opening_price,  # 데이터가 없는 경우 직전의 종가를 반영
+            'high_price': high_price,  # 데이터가 없는 경우 직전의 종가를 반영
+            'low_price': low_price,  # 데이터가 없는 경우 직전의 종가를 반영
+            'trade_price': trade_price,  # 데이터가 없는 경우 직전의 종가를 반영
+            'mean_price': mean_price,  # 데이터가 없는 경우 직전의 종가를 반영
+            'candle_acc_trade_price': candle_acc_trade_price,  # 데이터가 없는 경우 0
+            'candle_acc_trade_volume': candle_acc_trade_volume,  # 데이터가 없는 경우 0
+        }
+        refdata_list.append(ref_tmp)
+        date_time = datetime_convert(date_time, sec_delta=60 * min_delta, month_delta=month_delta)
+    refdata_list.reverse()  # 최근 시간부터 출력
+    return refdata_list
+# uq = get_upbit_quotation('KRW-JST', time_to_='2022-01-25T17:42:00', unit_=1, count_=200, sleep_=False)
+# sr = select_rawdata('rawdata_2201', 'KRW-JST', time_to_='2022-01-25T17:42:00')
 # uq[0] == sr[0]
 # pprint(sr[0])
-# # {'candle_acc_trade_price': 248083.0499998,
-# #  'candle_acc_trade_volume': 5312.27087794,
-# #  'candle_date_time_kst': '2022-01-25T17:42:00',
-# #  'candle_date_time_utc': '2022-01-25T08:42:00',
-# #  'high_price': 46.7,
-# #  'low_price': 46.7,
+# # {'candle_acc_trade_price': 3779962.18328235,
+# #  'candle_acc_trade_volume': 81390.27103833,
+# #  'candle_date_time_kst': '2022-01-25T17:41:00',
+# #  'candle_date_time_utc': '2022-01-25T08:41:00',
+# #  'high_price': 46.6,
+# #  'low_price': 46.4,
 # #  'market': 'KRW-JST',
-# #  'opening_price': 46.7,
-# #  'timestamp': 1643100135822,
-# #  'trade_price': 46.7,
+# #  'opening_price': 46.4,
+# #  'timestamp': 1643100119633,
+# #  'trade_price': 46.5,
 # #  'unit': 1}
+# for r in refine_rawdata(uq):
+#      print(r['date_time'], r['date_time_last'], r['candle_acc_trade_price'], r['mean_price'], r['trade_price'])
