@@ -63,7 +63,7 @@ def upsert_rawdata_table(table_name, uq_):
     conn.commit()
 
 # uq = get_upbit_quotation('KRW-JST', unit_=1, count_=10, sleep_=False)
-# insert_rawdata_table(table_name, uq)
+# upsert_rawdata_table(table_name, uq)
 
 
 def select_rawdata(table_name, market, time_to_=False, count_=200):
@@ -81,13 +81,18 @@ def select_rawdata(table_name, market, time_to_=False, count_=200):
         for k in ['candle_date_time_kst', 'candle_date_time_utc']:
             tmp[k] = datetime_convert(tmp[k])
         tmp['unit'] = 1
-
         result.append(tmp)
     return result
 # sr = select_rawdata(table_name, 'KRW-JST')
 # for s in sr:
 #     print(s['candle_date_time_kst'])
 # pq = prep_quotation(sr)
+
+
+def rawdata_router():
+    # DB select 시 접근 방법
+    return
+
 
 # sql = """
 # INSERT INTO `rawdata_2201` (
@@ -114,7 +119,6 @@ def select_rawdata(table_name, market, time_to_=False, count_=200):
 #     %(candle_acc_trade_volume)s
 #     )
 # """
-
 
 
 # Create rawdata table

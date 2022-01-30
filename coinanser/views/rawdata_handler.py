@@ -4,7 +4,9 @@ from time import sleep
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from pprint import pprint
-from coinanser.upbit_api.utils import datetime_convert
+from common.utils import datetime_convert
+from coinanser.views.db_handler import create_rawdata_table, upsert_rawdata_table
+# create_rawdata_table('test123')
 
 
 # Get data api - https://docs.upbit.com/reference/
@@ -26,7 +28,7 @@ def get_market_all(krw=True, print_=True):
         print('market 수:', len(market_dict))
         print('markets:', ', '.join([market_dict[market]['korean_name'] for market in market_dict]))
     return market_dict
-# MARKET_ALL = get_market_all()
+MARKET_ALL = get_market_all()
 
 
 def get_upbit_quotation(market_, time_to_=False, unit_=1, count_=200, sleep_=0.1):
@@ -52,7 +54,8 @@ def get_upbit_quotation(market_, time_to_=False, unit_=1, count_=200, sleep_=0.1
 
 
 def refine_rawdata(rawdata):
-    # market view 에 사용(API/DB -> view), training handler 에서는 사용하지 않음
+    # 누락된 시간의 데이터 삽입 및 평균 계산
+    # market view 에 사용(API/DB -> view) / training handler 에서는 사용하지 않음
     date_time = rawdata[-1]['candle_date_time_kst']  # 먼 시점부터 현재 시점으로 진행
     unit = rawdata[0]['unit']
     min_delta = (
@@ -79,13 +82,13 @@ def refine_rawdata(rawdata):
             candle_acc_trade_price, candle_acc_trade_volume = 0, 0
         ref_tmp = {
             'date_time': date_time,
-            'date_time_last': date_time_last,  # 데이터가 없는 경우 직전의 마지막 거래시간을 반영
-            'opening_price': opening_price,  # 데이터가 없는 경우 직전의 종가를 반영
-            'high_price': high_price,  # 데이터가 없는 경우 직전의 종가를 반영
-            'low_price': low_price,  # 데이터가 없는 경우 직전의 종가를 반영
-            'trade_price': trade_price,  # 데이터가 없는 경우 직전의 종가를 반영
-            'mean_price': mean_price,  # 데이터가 없는 경우 직전의 종가를 반영
-            'candle_acc_trade_price': candle_acc_trade_price,  # 데이터가 없는 경우 0
+            'date_time_last': date_time_last,                    # 데이터가 없는 경우 직전의 마지막 거래시간을 반영
+            'opening_price': opening_price,                      # 데이터가 없는 경우 직전의 종가를 반영
+            'high_price': high_price,                            # 데이터가 없는 경우 직전의 종가를 반영
+            'low_price': low_price,                              # 데이터가 없는 경우 직전의 종가를 반영
+            'trade_price': trade_price,                          # 데이터가 없는 경우 직전의 종가를 반영
+            'mean_price': mean_price,                            # 데이터가 없는 경우 직전의 종가를 반영
+            'candle_acc_trade_price': candle_acc_trade_price,    # 데이터가 없는 경우 0
             'candle_acc_trade_volume': candle_acc_trade_volume,  # 데이터가 없는 경우 0
         }
         refdata_list.append(ref_tmp)
@@ -109,3 +112,28 @@ def refine_rawdata(rawdata):
 # #  'unit': 1}
 # for r in refine_rawdata(uq):
 #      print(r['date_time'], r['date_time_last'], r['candle_acc_trade_price'], r['mean_price'], r['trade_price'])
+
+
+# TODO: rawdata DB insert 작업 자동화
+def run_rawdata_insert(market_list, s_time, e_time):
+    for market in market_list:
+        time_to = e_time
+        # table_name = 'rawdata_' + datetime_convert(time_to, to_str=False, sec_delta=-1).strftime("%y%m")
+        table_suf = datetime_convert(time_to, to_str=False, sec_delta=-1).strftime("%y%m")
+        while s_time < time_to:
+            print(market, time_to)
+            uq = get_upbit_quotation(market, time_to_=time_to)
+            if not uq:  # data 없는 경우 중단
+                break
+            while table_suf != datetime_convert(uq[-1]['candle_date_time_kst'], to_str=False).strftime("%y%m"):
+                uq.pop()  # 이전 데이터는 insert 하지 않음
+            upsert_rawdata_table('rawdata_' + table_suf, uq)
+            time_to = uq[-1]['candle_date_time_kst']
+            # table_suf 변경 작업 필요
+
+
+# run_rawdata_insert(MARKET_ALL, '2022-01-01T00:00:00', '2022-02-01T00:00:00')
+
+# get_upbit_quotation('KRW-JST', time_to_='2022-01-25T17:42:00')[-1]
+
+market, s_time, e_time = 'KRW-WEMIX', '2022-01-01T00:00:00', '2022-02-01T00:00:00'
