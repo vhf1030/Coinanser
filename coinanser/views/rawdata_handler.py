@@ -51,7 +51,7 @@ def get_upbit_quotation(market_, time_to_=False, unit_=1, count_=200, sleep_=0.1
     return response
 # uq = get_upbit_quotation('KRW-XRP', unit_='months', count_=200, sleep_=False)
 # uq = get_upbit_quotation('KRW-JST', unit_=1, count_=200, sleep_=False)
-
+# get_upbit_quotation('KRW-JST', time_to_= '2022-02-02T14:25:00', unit_=1, count_=1, sleep_=False)
 
 def refine_rawdata(rawdata):
     # 누락된 시간의 데이터 삽입 및 평균 계산
@@ -114,26 +114,30 @@ def refine_rawdata(rawdata):
 #      print(r['date_time'], r['date_time_last'], r['candle_acc_trade_price'], r['mean_price'], r['trade_price'])
 
 
-# TODO: rawdata DB insert 작업 자동화
 def run_rawdata_insert(market_list, s_time, e_time):
     for market in market_list:
         time_to = e_time
         # table_name = 'rawdata_' + datetime_convert(time_to, to_str=False, sec_delta=-1).strftime("%y%m")
-        table_suf = datetime_convert(time_to, to_str=False, sec_delta=-1).strftime("%y%m")
         while s_time < time_to:
             print(market, time_to)
             uq = get_upbit_quotation(market, time_to_=time_to)
-            if not uq:  # data 없는 경우 중단
+            if not uq:  # upbit api data 없는 경우 중단
                 break
+            first_time = uq[0]['candle_date_time_kst']
+            if first_time < s_time:  # 기준 시간보다 이전인 경우 중단
+                break
+            table_suf = datetime_convert(first_time, to_str=False).strftime("%y%m")
             while table_suf != datetime_convert(uq[-1]['candle_date_time_kst'], to_str=False).strftime("%y%m"):
-                uq.pop()  # 이전 데이터는 insert 하지 않음
+                uq.pop()  # 이전 달의 데이터는 insert 하지 않음
             upsert_rawdata_table('rawdata_' + table_suf, uq)
             time_to = uq[-1]['candle_date_time_kst']
-            # table_suf 변경 작업 필요
 
 
-# run_rawdata_insert(MARKET_ALL, '2022-01-01T00:00:00', '2022-02-01T00:00:00')
+# run_rawdata_insert(MARKET_ALL, '2022-01-01T00:00:00', '2022-02-02T00:00:00')
+# run_rawdata_insert(['KRW-JST', 'KRW-WEMIX'], '2022-01-01T00:00:00', '2022-02-02T00:00:00')
+
+# market_remain = ['KRW-WEMIX']
+# run_rawdata_insert(market_remain, '2022-01-01T00:00:00', '2022-02-02T00:00:00')
 
 # get_upbit_quotation('KRW-JST', time_to_='2022-01-25T17:42:00')[-1]
-
-market, s_time, e_time = 'KRW-WEMIX', '2022-01-01T00:00:00', '2022-02-01T00:00:00'
+# market, s_time, e_time = 'KRW-WEMIX', '2022-01-01T00:00:00', '2022-02-02T00:00:00'

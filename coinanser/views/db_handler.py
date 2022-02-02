@@ -59,40 +59,60 @@ def upsert_rawdata_table(table_name, uq_):
            " ON DUPLICATE KEY UPDATE " +
            ', '.join([c + ' = VALUES(' + c + ')' for c in columns]) +
            ", check_date_time = default;")  # data 시간을 확인시간과 비교하여 데이터가 완전히 수집되었는지 확인 가능
-    cursor.executemany(sql, val)
+    try:
+        cursor.executemany(sql, val)
+    except pymysql.err.ProgrammingError:
+        create_rawdata_table(table_name)  # table 없는 경우 생성
+        cursor.executemany(sql, val)
     conn.commit()
 
 # uq = get_upbit_quotation('KRW-JST', unit_=1, count_=10, sleep_=False)
 # upsert_rawdata_table(table_name, uq)
 
 
-def select_rawdata(table_name, market, time_to_=False, count_=200):
-    time_to = datetime.now() if not time_to_ else time_to_
+def tb_rawdata(table_name, market, time_to, count_=200):
     columns = RAWDATA_COLUMNS  # get_upbit_quotation 과 형식을 맞추기 위해 check_date_time 은 받아오지 않음
+    results = []
     sql = ("SELECT %s " % ', '.join(columns) +
            "FROM `test`.`%s`" % table_name +
            "WHERE (candle_date_time_kst < '%s' AND market = '%s')" % (time_to, market) +
-           "ORDER BY candle_date_time_kst ASC LIMIT %s;" % count_)
-    cursor.execute(sql)
+           "ORDER BY candle_date_time_kst DESC LIMIT %s;" % count_)
+    try:
+        cursor.execute(sql)
+    except pymysql.err.ProgrammingError as e:
+        print('pymysql error:', e.args[1])
+        return results
     selected = cursor.fetchall()
-    result = []
-    while selected:
-        tmp = selected.pop()
+    for s in selected:
         for k in ['candle_date_time_kst', 'candle_date_time_utc']:
-            tmp[k] = datetime_convert(tmp[k])
-        tmp['unit'] = 1
-        result.append(tmp)
-    return result
-# sr = select_rawdata(table_name, 'KRW-JST')
-# for s in sr:
-#     print(s['candle_date_time_kst'])
+            s[k] = datetime_convert(s[k])
+        s['unit'] = 1
+        results.append(s)
+    return results
+# tr = tb_rawdata('rawdata_2201', 'KRW-JST', '2022-01-11T19:01:00')
+# for t in tr:
+#     print(t['candle_date_time_kst'])
 # pq = prep_quotation(sr)
 
 
-def rawdata_router():
-    # DB select 시 접근 방법
-    return
-
+def select_rawdata(market, time_to_=False, count_=200):
+    # DB select 시 table 접근 방법 설정 router 포함
+    time_to = datetime.now() if not time_to_ else time_to_
+    table_name = 'rawdata_' + datetime_convert(time_to, to_str=False).strftime("%y%m")
+    results = []
+    while len(results) < count_:
+        tr = tb_rawdata(table_name, market, time_to, count_=count_)
+        if not tr:
+            break
+        results.extend(tr)
+        last_time = results[-1]['candle_date_time_kst']
+        table_name = 'rawdata_' + datetime_convert(last_time, to_str=False, sec_delta=-1).strftime("%y%m")
+    return results[:count_]
+# sr = select_rawdata('KRW-BTC', '2022-01-01T01:01:00', 300)
+# sr = select_rawdata('KRW-BTC', '2022-02-01T01:01:00', 300)
+# for i, s in enumerate(sr):
+#     print(i, s['candle_date_time_kst'])
+# len(sr)
 
 # sql = """
 # INSERT INTO `rawdata_2201` (
