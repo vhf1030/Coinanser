@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from pprint import pprint
 from common.utils import datetime_convert
-from coinanser.views.db_handler import create_rawdata_table, upsert_rawdata_table
+from coinanser.views.db_handler import upsert_rawdata_table
 # create_rawdata_table('test123')
 
 
@@ -53,6 +53,7 @@ def get_upbit_quotation(market_, time_to_=False, unit_=1, count_=200, sleep_=0.1
 # uq = get_upbit_quotation('KRW-JST', unit_=1, count_=200, sleep_=False)
 # get_upbit_quotation('KRW-JST', time_to_= '2022-02-02T14:25:00', unit_=1, count_=1, sleep_=False)
 
+
 def refine_rawdata(rawdata):
     # 누락된 시간의 데이터 삽입 및 평균 계산
     # market view 에 사용(API/DB -> view) / training handler 에서는 사용하지 않음
@@ -96,7 +97,7 @@ def refine_rawdata(rawdata):
     refdata_list.reverse()  # 최근 시간부터 출력
     return refdata_list
 # uq = get_upbit_quotation('KRW-JST', time_to_='2022-01-25T17:42:00', unit_=1, count_=200, sleep_=False)
-# sr = select_rawdata('rawdata_2201', 'KRW-JST', time_to_='2022-01-25T17:42:00')
+# sr = get_db_rawdata('rawdata_2201', 'KRW-JST', time_to_='2022-01-25T17:42:00')
 # uq[0] == sr[0]
 # pprint(sr[0])
 # # {'candle_acc_trade_price': 3779962.18328235,
@@ -126,15 +127,16 @@ def run_rawdata_insert(market_list, s_time, e_time):
             first_time = uq[0]['candle_date_time_kst']
             if first_time < s_time:  # 기준 시간보다 이전인 경우 중단
                 break
-            table_suf = datetime_convert(first_time, to_str=False).strftime("%y%m")
+            table_suf = datetime_convert(first_time, to_str=False).strftime("%y%m")  # router 부분
             while table_suf != datetime_convert(uq[-1]['candle_date_time_kst'], to_str=False).strftime("%y%m"):
                 uq.pop()  # 이전 달의 데이터는 insert 하지 않음
             upsert_rawdata_table('rawdata_' + table_suf, uq)
             time_to = uq[-1]['candle_date_time_kst']
+    return
 
 
-# run_rawdata_insert(MARKET_ALL, '2022-01-01T00:00:00', '2022-02-02T00:00:00')
-# run_rawdata_insert(['KRW-JST', 'KRW-WEMIX'], '2022-01-01T00:00:00', '2022-02-02T00:00:00')
+# run_rawdata_insert(MARKET_ALL, '2021-12-01T00:00:00', '2022-01-01T00:00:00')
+# run_rawdata_insert(['KRW-JST', 'KRW-WEMIX'], '2021-12-01T00:00:00', '2022-01-01T00:00:00')
 
 # market_remain = ['KRW-WEMIX']
 # run_rawdata_insert(market_remain, '2022-01-01T00:00:00', '2022-02-02T00:00:00')
