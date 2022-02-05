@@ -1,5 +1,5 @@
 from my_setting.config import PYMYSQL_CONNECT
-from datetime import datetime
+from datetime import datetime, timedelta
 from common.utils import datetime_convert
 import pymysql
 
@@ -19,13 +19,18 @@ ATPU_COLUMNS = ['market', 'e_date_time', 's_date_time', 'duration', 'opening_pri
                 'high_price', 'low_price', 'trade_price', 'mean_price', 'atp_sum']
 
 
-def create_rawdata_table(table_name):
+def check_table(table_name):
     sql = '''
-        SELECT 1 FROM information_schema.tables
-        WHERE table_schema = 'test'
-        AND table_name = '%s'
-        ''' % table_name
-    if cursor.execute(sql):
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'test'
+    AND table_name = '%s'
+    ''' % table_name
+    return cursor.execute(sql)
+# check_table('rawdata_2301')
+
+
+def create_rawdata_table(table_name):
+    if check_table(table_name):
         print("table('" + table_name + "') already exists")
         return
     else:
@@ -71,13 +76,13 @@ def upsert_rawdata_table(table_name, uq_):
 # upsert_rawdata_table(table_name, uq)
 
 
-def select_rawdata(table_name, market, time_to, count_=200):
+def select_rawdata(table_name, market, time_to, limit_=200):
     columns = RAWDATA_COLUMNS  # get_upbit_quotation 과 형식을 맞추기 위해 check_date_time 은 받아오지 않음
     results = []
     sql = ("SELECT %s " % ', '.join(columns) +
            "FROM `test`.`%s`" % table_name +
            "WHERE (candle_date_time_kst < '%s' AND market = '%s')" % (time_to, market) +
-           "ORDER BY candle_date_time_kst DESC LIMIT %s;" % count_)
+           "ORDER BY candle_date_time_kst DESC LIMIT %s;" % limit_)
     try:
         cursor.execute(sql)
     except pymysql.err.ProgrammingError as e:
@@ -98,21 +103,23 @@ def select_rawdata(table_name, market, time_to, count_=200):
 
 def get_db_rawdata(market, time_to_=False, count_=200):
     # DB select 시 table 접근 방법 설정 router 포함
-    time_to = datetime.now() if not time_to_ else time_to_
-    table_name = 'rawdata_' + datetime_convert(time_to, to_str=False).strftime("%y%m")
+    time_to = datetime.now() if not time_to_ else datetime_convert(time_to_, to_str=False)
+    table_name = 'rawdata_' + time_to.strftime("%y%m")
     results = []
     while len(results) < count_:
-        sr = select_rawdata(table_name, market, time_to, count_=count_)
+        sr = select_rawdata(table_name, market, time_to, limit_=count_)
         if not sr:
-            table_name = 'rawdata_' + datetime_convert(time_to, to_str=False, sec_delta=-86400).strftime("%y%m")
+            # router 부분
+            time_to = (time_to - timedelta(seconds=1)).replace(hour=0, minute=0, second=0)
+            table_name = 'rawdata_' + time_to.strftime("%y%m")
+            if not check_table(table_name):
+                return results
             continue
         results.extend(sr)
-        time_to = results[-1]['candle_date_time_kst']
-        table_name = 'rawdata_' + datetime_convert(time_to, to_str=False, sec_delta=-86400).strftime("%y%m")
-        # 하루 이상 데이터가 없는 경우 에러가 날 수 있음
+        time_to = datetime_convert(results[-1]['candle_date_time_kst'], to_str=False)
     return results[:count_]
 # sr = get_db_rawdata('KRW-BTC', '2022-01-01T01:01:00', 300)
-# sr = get_db_rawdata('KRW-BTC', '2022-02-01T01:01:00', 300)
+# sr = get_db_rawdata('KRW-BTC', '2021-12-01T01:01:00', 300)
 # for i, s in enumerate(sr):
 #     print(i, s['candle_date_time_kst'])
 # len(sr)
@@ -150,9 +157,9 @@ def create_atpu_table(table_name):
         return
 
 
-def upsert_atpu_table(table_name, rawdata):
+def upsert_atpu_table(table_name, atpu):
     columns = ATPU_COLUMNS
-    val = [tuple(r[c] for c in columns) for r in rawdata]
+    val = [tuple(r[c] for c in columns) for r in atpu]
     sql = ("INSERT INTO `test`.`" + table_name + "` (" + ', '.join(columns) +
            ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" +
            " ON DUPLICATE KEY UPDATE " +
@@ -166,64 +173,44 @@ def upsert_atpu_table(table_name, rawdata):
     conn.commit()
 
 
+def select_atpu(table_name, market, time_to):
+    columns = ATPU_COLUMNS
+    results = []
+    sql = ("SELECT %s " % ', '.join(columns) +
+           "FROM `test`.`%s`" % table_name +
+           "WHERE (e_date_time < '%s' AND market = '%s')" % (time_to, market) +
+           "ORDER BY e_date_time DESC LIMIT 1")
+    try:
+        cursor.execute(sql)
+    except pymysql.err.ProgrammingError as e:
+        print('pymysql error:', e.args[1])
+        return results
+    selected = cursor.fetchall()
+    return selected
+select_atpu('atpu_2202', 'KRW-BTC', '2022-02-01 23:58:01')
+# select_atpu('atpu_2202', 'KRW-BTC', datetime(2022, 2, 1, 23, 36))
+# select_atpu('atpu_2202', 'KRW-BTC', datetime.now())
 
 
-
-
-
-
-
-
-
-# sql = """
-# INSERT INTO `rawdata_2201` (
-#     market, candle_date_time_utc, candle_date_time_kst, opening_price, high_price, low_price, trade_price,
-#     timestamp, candle_acc_trade_price, candle_acc_trade_volume
-# ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-# """
-#
-# cursor.execute(sql, ['KRW-JST', '2022-01-25T06:15:00', '2022-01-25T15:15:00', 46.8, 46.8, 46.8, 46.8, 1643092535553, 24165.85084898, 516.36433438])
-# conn.commit()
-#
-# sql = """
-# INSERT INTO `rawdata_2201`
-# VALUES (
-#     %(market)s,
-#     %(candle_date_time_utc)s,
-#     %(candle_date_time_kst)s,
-#     %(opening_price)s,
-#     %(high_price)s,
-#     %(low_price)s,
-#     %(trade_price)s,
-#     %(timestamp)s,
-#     %(candle_acc_trade_price)s,
-#     %(candle_acc_trade_volume)s
-#     )
-# """
-
-
-# Create rawdata table
-# market_all = get_market_all()
-# for market in market_all:
-#     table_name = 'rawdata_' + market
-#     sql = '''
-#     SELECT 1 FROM information_schema.tables
-#     WHERE table_schema = 'coinanser'
-#     AND table_name = '%s'
-#     ''' % table_name
-#     if not cursor.execute(sql):
-#         sql = '''CREATE TABLE `coinanser`.`%s` (
-#             `date_time` DATETIME NOT NULL,
-#             `date_time_last` DATETIME NULL,
-#             `opening_price` DOUBLE NULL,
-#             `high_price` DOUBLE NULL,
-#             `low_price` DOUBLE NULL,
-#             `trade_price` DOUBLE NULL,
-#             `candle_acc_trade_price` DOUBLE NULL,
-#             `candle_acc_trade_volume` DOUBLE NULL,
-#             PRIMARY KEY (`date_time`)
-#             )ENGINE = MyISAM;
-#             ''' % table_name
-#         cursor.execute(sql)
-#         coinanser_conn.commit()
+def get_atpu_seq(market, time_to_=False, count_=50):
+    # DB sequential data select 시 table 접근 방법 설정 router 포함
+    time_to = datetime.now() if not time_to_ else datetime_convert(time_to_, to_str=False)
+    table_name = 'atpu_' + time_to.strftime("%y%m")
+    results = []
+    while len(results) < count_:
+        sa = select_atpu(table_name, market, time_to)
+        if not sa:
+            # router 부분
+            time_to = (time_to - timedelta(seconds=1)).replace(hour=0, minute=0, second=0)
+            table_name = 'atpu_' + time_to.strftime("%y%m")
+            if not check_table(table_name):
+                return results
+            continue
+        results.extend(sa)
+        time_to = datetime_convert(results[-1]['s_date_time'], to_str=False)
+    return results[:count_]
+# atpu_seq = get_atpu_seq('KRW-IQ', '2022-02-01T00:58:01')
+# atpu_seq = get_atpu_seq('KRW-BTC')
+# for a in atpu_seq:
+#     print(a['e_date_time'], a['s_date_time'], a['duration'], a['mean_price'])
 
