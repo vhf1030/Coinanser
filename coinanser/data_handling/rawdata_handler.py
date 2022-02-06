@@ -1,11 +1,8 @@
 import requests
-import math
 from time import sleep
-from datetime import datetime, timedelta
-from dateutil.relativedelta import relativedelta
-from pprint import pprint
 from common.utils import datetime_convert
-from coinanser.views.db_handler import upsert_rawdata_table
+from coinanser.data_handling.db_handler import upsert_rawdata_table
+from pprint import pp
 # create_rawdata_table('test123')
 
 

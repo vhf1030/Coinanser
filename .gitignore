@@ -3,6 +3,6 @@ db.sqlite3
 *.pyc
 __pycache__
 my_setting/
-prediction_model/ML_models/
+coinanser/data_handling/prediction_model/ML_models/
 dump_data*
 static/jquery-ui-1.13.0.custom/

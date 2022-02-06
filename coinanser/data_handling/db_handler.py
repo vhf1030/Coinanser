@@ -214,3 +214,5 @@ def get_atpu_seq(market, time_to_=False, count_=50):
 # for a in atpu_seq:
 #     print(a['e_date_time'], a['s_date_time'], a['duration'], a['mean_price'])
 
+# TODO: 디렉터리 정리 후 atp unit view 구현 및 market view 수정
+
