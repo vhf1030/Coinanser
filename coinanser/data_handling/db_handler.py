@@ -201,8 +201,8 @@ def get_atpu_seq(market, time_to_=False, count_=50):
         sa = select_atpu(table_name, market, time_to)
         if not sa:
             # router 부분
-            time_to = (time_to - timedelta(seconds=1)).replace(hour=0, minute=0, second=0)
-            table_name = 'atpu_' + time_to.strftime("%y%m")
+            time_tmp = (time_to - timedelta(seconds=1)).replace(hour=0, minute=0, second=0)
+            table_name = 'atpu_' + time_tmp.strftime("%y%m")
             if not check_table(table_name):
                 return results
             continue
@@ -214,5 +214,6 @@ def get_atpu_seq(market, time_to_=False, count_=50):
 # for a in atpu_seq:
 #     print(a['e_date_time'], a['s_date_time'], a['duration'], a['mean_price'])
 
-# TODO: 디렉터리 정리 후 atp unit view 구현 및 market view 수정
+# market, time_to_, count_ = 'KRW-BTC', '2022-02-01T00:58:01', 50
+# TODO: atp unit view 구현 및 market view 수정(minutes(1, 10, 100): DB / day, week, month: API)
 

@@ -5,16 +5,13 @@
 <html>
   <head>
     <script type="text/javascript">
-      // google.charts.load('current', {'packages':['line']});
-      // core chart 사용시 tooltip 변경이 자유로움 - corechart로 변경하는 부분 보류
-      // google.charts.load('current', {'packages':['corechart']});
       google.charts.load('current', {'packages':['line', 'corechart']});
       google.charts.setOnLoadCallback(drawChart);
 
     function drawChart() {
 
       var data = new google.visualization.DataTable();
-      data.addColumn('datetime');
+      data.addColumn('number', 'record');
       data.addColumn('number', '고가');
       data.addColumn({type: 'string', role: 'tooltip'});
       data.addColumn('number', '평균');
@@ -23,15 +20,15 @@
       data.addColumn({type: 'string', role: 'tooltip'});
 
       data.addRows([
-      {% for unit in unit_price_list %}
+      {% for atpu in atpu_seq_list %}
         [
-          new Date("{{ unit.date_time }}"),
-          {{ unit.high_price }},
-          '{{ unit.tooltip }}',
-          {{ unit.mean_price }},
-          '{{ unit.tooltip }}',
-          {{ unit.low_price }},
-          '{{ unit.tooltip }}',
+          {{ atpu.record }},
+          {{ atpu.high_price }},
+          '{{ atpu.tooltip }}',
+          {{ atpu.mean_price }},
+          '{{ atpu.tooltip }}',
+          {{ atpu.low_price }},
+          '{{ atpu.tooltip }}',
         ],
       {% endfor %}
       ])
@@ -53,7 +50,7 @@
           },
         },
         hAxis: {
-          format: 'yy/M/d H:mm',
+          // format: 'yy/M/d H:mm',
           gridlines: {count: 3},
         },
         colors: ['#8B0707', '#3366CC', '#E67300'],
@@ -94,16 +91,16 @@
     function drawStuff() {
 
       var data = new google.visualization.DataTable();
-      data.addColumn('datetime', 'Time');
-      data.addColumn('number', '거래금액');
+      data.addColumn('number', 'record');
+      data.addColumn('number', '초당평균\n거래금액');
       data.addColumn({type: 'string', role: 'tooltip'});
 
       data.addRows([
-      {% for unit in unit_price_list %}
+      {% for atpu in atpu_seq_list %}
         [
-          new Date("{{ unit.date_time }}"),
-          {{ unit.trade_price_account }},
-          '{{ unit.tooltip }}',
+          {{ atpu.record }},
+          {{ atpu.atp_sum|dvd:atpu.duration }},
+          '{{ atpu.tooltip }}',
         ],
       {% endfor %}
       ])
@@ -115,14 +112,13 @@
           subtitle: '거래금액 (KRW)'
         },
         vAxis: {
-          title: 'KRW (log scale)',
-          format: 'short',
-          scaleType: 'log', //
+          title: 'KWR (log scale)',
+          // format: 'short',
+
           gridlines: { count: 1.5 }, //
           titleTextStyle: { italic: false }, //
         },
         hAxis: {
-          format: 'yy/M/d H:mm',
           gridlines: { count: 3 },
         },
         chartArea: {
@@ -144,7 +140,7 @@
   </head>
 </html>
 
-{{ unit_price_list|get_idx:0 }}
+{{ atpu_seq_list|get_idx:0 }}
 <div class="container my-3">
     <div class="row" style="height: 100px;">
         <div class="col" style="position: absolute; left: 5px;">
@@ -202,7 +198,9 @@
 <div class="container my-3">
     <div class="row justify-content-between my-3">
         <span>Mean price of {{ market_list|get_idx:market|get_idx:'english_name' }}</span>
-        <span class="small">마지막 거래시각: {{ date_time_last }} &nbsp;</span>
+        <span class="small">
+            거래시각 출력 범위: {{ date_time_first }} ~ {{ date_time_last }}
+        </span>
         <div id="linechart_material" style="width: 100%; height: 400px"></div>
     </div>
     <br>
@@ -212,10 +210,9 @@
     </div>
 </div>
 
-<form id="searchForm" method="get" action="{% url 'coinanser:market_data' %}">
+<form id="searchForm" method="get" action="{% url 'coinanser:atpu_board' %}">
     <input type="hidden" id="market_kw" name="market_kw" value="{{ market_kw }}">
     <input type="hidden" id="market" name="market" value="{{ market }}">
-    <input type="hidden" id="unit" name="unit" value="{{ unit }}">
     <input type="hidden" id="show_count" name="show_count" value="{{ show_count }}">
     <input type="hidden" id="endtime" name="endtime" value="{{ endtime }}">
 </form>

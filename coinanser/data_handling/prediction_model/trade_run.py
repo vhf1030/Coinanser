@@ -17,8 +17,9 @@ from coinanser.upbit_api.get_quotation import *
 
 def predict_market(market_, model_path_):
     start_date_time = datetime_convert(datetime.now())
-    gca = get_candles_api(market_)
-    if datetime_convert(gca[0]['date_time'], sec_delta=60) < start_date_time:
+    gca = get_candles_api(market_)[1:]  # 현재 데이터 사용하지 않음!
+    if datetime_convert(gca[0]['date_time'], sec_delta=120) < start_date_time:
+        # print('datetime error:', start_date_time, gca[0]['date_time'])
         return False, gca
     try:
         cr = candles_refine(gca)
@@ -26,9 +27,9 @@ def predict_market(market_, model_path_):
         return False, gca
     if not check_stats(cr):  # 기준 조정 필요
         return False, gca
-    if check_stats(cr):
-        print(gca[0]['date_time'], check_stats(cr), market_)
-    return check_model(cr, model_path_), gca[0]
+    cm = check_model(cr, model_path_)
+    print(gca[0]['date_time'], gca[0]['date_time_last'], market_, cm)
+    return cm, gca[0]
 
 
 # trade_id, start_date_time, predict_model, model_version, market, bid_goal, ask_goal
@@ -55,7 +56,7 @@ def run_model_trade(market_, gca0_, model_path_):
     return result
 
 
-model_path = 'prediction_model/ML_models/tapering_hell/cuda_test_0.2.pt'
+model_path = 'coinanser/data_handling/prediction_model/ML_models/tapering_hell/cuda_test_0.2.pt'
 # market_status = {}  # DB에서 가져오는 방법 구현 필요!
 market_status = {'KRW-GAS': {'trade_id': 'KRW-GAS_20220205T102214', 'start_date_time': '2022-02-05T10:22:14', 'predict_model': 'cuda_test', 'model_version': 0.2, 'market': 'KRW-GAS', 'bid_goal': 7365.0, 'ask_goal': 7405.0, 'run_state': 'run_ask', 'bid_id': 'KRW-GAS_bid_20220205T102214', 'ask_id': 'KRW-GAS_ask_20220205T102252', 'bid_view': {'uuid': 'dcee124d-be22-410e-8d4a-2480cb466c7a', 'side': 'bid', 'ord_type': 'limit', 'price': '7365.0', 'state': 'done', 'market': 'KRW-GAS', 'created_at': '2022-02-05T10:22:14+09:00', 'volume': '6.78886626', 'remaining_volume': '0.0', 'reserved_fee': '25.00000000245', 'remaining_fee': '0.05091649695', 'paid_fee': '24.9490835055', 'locked': '101.88391039695', 'executed_volume': '6.78886626', 'trades_count': 1, 'trades': [{'market': 'KRW-GAS', 'uuid': 'db701b03-bc9d-4e19-a0b8-e1483767a8a0', 'price': '7350.0', 'volume': '6.78886626', 'funds': '49898.167011', 'created_at': '2022-02-05T10:22:14+09:00', 'side': 'bid'}]}, 'bid_parsed': {'fund_sum': 49898.167011, 'volume_sum': 6.78886626, 'price_mean': 7350.0, 'fund_cons_fee': 49923.116094505494, 'last_time': '2022-02-05T10:22:14'}, 'ask_view': {'uuid': '41a54cff-1b0c-4fe4-bcc0-c8e721fd78c2', 'side': 'ask', 'ord_type': 'limit', 'price': '7390.0', 'state': 'wait', 'market': 'KRW-GAS', 'created_at': '2022-02-05T10:22:52+09:00', 'volume': '6.78886626', 'remaining_volume': '6.78886626', 'reserved_fee': '0.0', 'remaining_fee': '0.0', 'paid_fee': '0.0', 'locked': '6.78886626', 'executed_volume': '0.0', 'trades_count': 0, 'trades': []}}}
 bid_funds = 50000

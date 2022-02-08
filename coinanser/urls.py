@@ -1,5 +1,6 @@
 from django.urls import path
-from coinanser.views import market_views, community_views, question_views, answer_views, comment_views, vote_views, monitoring_views
+from coinanser.views import market_views, atpu_views, monitoring_views, community_views,\
+    question_views, answer_views, comment_views, vote_views
 from coinanser.views import rawdata_views  # google chart 인자 전달 test
 # # import * 은 파일 level의 함수를 인식함 / 디렉터리인 경우 __init__.py 안의 함수를 인식함
 
@@ -8,6 +9,7 @@ app_name = 'coinanser'
 
 urlpatterns = [
     path('home/', market_views.market_data, name='market_data'),
+    path('accountprice/', atpu_views.atpu_board, name='atpu_board'),
     path('monitoring/', monitoring_views.order_board, name='order_board'),
     path('community/', community_views.question_board, name='question_board'),
     path('test/', rawdata_views.select_test, name='select_test'),  # google chart 인자 전달 test

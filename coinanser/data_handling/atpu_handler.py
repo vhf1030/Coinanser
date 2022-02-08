@@ -70,13 +70,7 @@ def run_atpu_insert(market_list, s_time, e_time):
 
 # run_atpu_insert(MARKET_ALL, '2022-01-01T00:00:00', '2022-02-02T00:00:00')
 
-# run_atpu_insert(['KRW-ATOM', 'KRW-TT', 'KRW-CRE', 'KRW-MBL', 'KRW-WAXP', 'KRW-HBAR', 'KRW-MED', 'KRW-MLK', 'KRW-STPT',
-#                  'KRW-ORBS', 'KRW-VET', 'KRW-CHZ', 'KRW-STMX', 'KRW-DKA', 'KRW-HIVE', 'KRW-KAVA', 'KRW-AHT', 'KRW-LINK',
-#                  'KRW-XTZ', 'KRW-BORA', 'KRW-JST', 'KRW-CRO', 'KRW-TON', 'KRW-SXP', 'KRW-HUNT', 'KRW-PLA', 'KRW-DOT',
-#                  'KRW-SRM', 'KRW-MVL', 'KRW-STRAX', 'KRW-AQT', 'KRW-GLM', 'KRW-SSX', 'KRW-META', 'KRW-FCT2', 'KRW-CBK',
-#                  'KRW-SAND', 'KRW-HUM', 'KRW-DOGE', 'KRW-STRK', 'KRW-PUNDIX', 'KRW-FLOW', 'KRW-DAWN', 'KRW-AXS',
-#                  'KRW-STX', 'KRW-XEC', 'KRW-SOL', 'KRW-MATIC', 'KRW-NU', 'KRW-AAVE', 'KRW-1INCH', 'KRW-ALGO',
-#                  'KRW-NEAR', 'KRW-WEMIX'], '2022-01-01T00:00:00', '2022-02-02T00:00:00')
+# run_atpu_insert(['KRW-WEMIX'], '2022-01-01T00:00:00', '2022-02-02T00:00:00')
 
 # # 월 초 시간이 출력되는 이유 - run function 상에서 table에 해당하지 않는 데이터를 제거함
 # # KRW-ETH 2022-02-01T01:50:00 200
@@ -84,7 +78,7 @@ def run_atpu_insert(market_list, s_time, e_time):
 # # KRW-MTL 2022-02-02T00:00:00 12800
 # # KRW-MTL 2022-02-01T00:00:00 6400
 
-# market, s_time, e_time = 'KRW-QKC', '2022-01-01T00:00:00', '2022-02-02T00:00:00'
+# market, s_time, e_time = 'KRW-WEMIX', '2022-01-01T00:00:00', '2022-02-02T00:00:00'
 # get_db_rawdata('KRW-QKC', '2022-02-01T00:01:00', 200)
 
 # sum([r['candle_acc_trade_price'] for r in rawdata])
