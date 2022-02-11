@@ -102,7 +102,7 @@
       {% for unit in unit_price_list %}
         [
           new Date("{{ unit.date_time }}"),
-          {{ unit.trade_price_account }},
+          {{ unit.candle_acc_trade_price }},
           '{{ unit.tooltip }}',
         ],
       {% endfor %}
@@ -144,7 +144,7 @@
   </head>
 </html>
 
-{{ unit_price_list|get_idx:0 }}
+<!--{{ unit_price_list|get_idx:0 }}-->
 <div class="container my-3">
     <div class="row" style="height: 100px;">
         <div class="col" style="position: absolute; left: 5px;">

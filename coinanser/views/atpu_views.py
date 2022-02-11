@@ -2,7 +2,7 @@ from django.shortcuts import render
 from datetime import datetime
 from coinanser.upbit_api.get_quotation import MARKET_ALL
 from coinanser.upbit_api.utils import datetime_convert, sig_fig5
-from coinanser.data_handling.db_handler import get_atpu_seq
+from coinanser.data_handling.db_handler import get_atpu_seq, run_insert_product_DB
 
 
 def atpu_board(request):
@@ -11,14 +11,16 @@ def atpu_board(request):
     """   # TODO: db에서 market list 가져오는 것으로 변경 필요
     market = request.GET.get('market')
     market_kw = request.GET.get('market_kw', '').lower()
-    # unit_get = request.GET.get('unit', 'days')
+    unit_get = request.GET.get('unit', '100')
     endtime_get = request.GET.get('endtime', '')  # str
     show_count_get = request.GET.get('show_count')
     market_all = MARKET_ALL
-    market_search = {k: market_all[k] for k in market_all
-                     if market_kw in market_all[k]['korean_name']
-                     or market_kw in market_all[k]['english_name'].lower()
-                     or market_kw in market_all[k]['symbol'].lower()} if market_kw else market_all
+    market_search = {
+        k: market_all[k] for k in market_all
+        if market_kw in market_all[k]['korean_name']
+           or market_kw in market_all[k]['english_name'].lower()
+           or market_kw in market_all[k]['symbol'].lower()
+    } if market_kw else market_all
     market_search = market_all if not market_search else market_search
     if market not in market_search:
         market = list(market_search.keys())[0]
@@ -27,6 +29,9 @@ def atpu_board(request):
     # unit_str = {u: str(u) + ' 분' if type(u) == int else u for u in unit_list}
     # unit_str['days'], unit_str['weeks'], unit_str['months'] = '일', '주', '월'
     # unit = unit_get if unit_get in ['days', 'weeks', 'months'] else int(unit_get)
+    unit_list = [100]
+    unit_str = {u: str(u) + ' 억원' for u in unit_list}
+    unit = int(unit_get)
 
     show_count_list = [50, 100, 200]
     show_count_str = {sc: str(sc) + ' 건' if type(sc) == int else sc for sc in show_count_list}
@@ -70,7 +75,6 @@ def atpu_board(request):
     # min_chart = min([up['low_price'] for up in unit_price_list])
     # max_chart = max([up['high_price'] for up in unit_price_list])
 
-
     atpu_seq_list = atpu_seq[:show_count]
     atpu_seq_list.reverse()
     i = 0
@@ -96,8 +100,8 @@ def atpu_board(request):
         'market_kw': market_kw,
         'market_list': market_search,
         'market': market,
-        # 'unit_str': unit_str,
-        # 'unit': unit,
+        'unit_str': unit_str,
+        'unit': unit,
         'show_count_str': show_count_str,
         'show_count': show_count,
         'endtime': endtime,

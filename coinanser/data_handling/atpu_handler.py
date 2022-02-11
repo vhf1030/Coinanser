@@ -1,6 +1,6 @@
 from common.utils import datetime_convert
-from coinanser.data_handling.db_handler import get_db_rawdata, upsert_atpu_table
-from coinanser.data_handling.rawdata_handler import MARKET_ALL
+# from coinanser.data_handling.db_handler import get_db_rawdata, upsert_atpu_table
+# from coinanser.data_handling.rawdata_handler import MARKET_ALL
 
 
 def atpu_converter(rawdata):
@@ -39,38 +39,7 @@ def atpu_converter(rawdata):
 # sum([t['duration'] for t in test]) / len(test) / 60
 
 
-def run_atpu_insert(market_list, s_time, e_time):
-    for market in market_list:
-        time_to = e_time
-        count = 200
-        # table_name = 'rawdata_' + datetime_convert(time_to, to_str=False, sec_delta=-1).strftime("%y%m")
-        while s_time < time_to:
-            print(market, time_to, count)
-            rawdata = get_db_rawdata(market, time_to_=time_to, count_=count)
-            if not rawdata:  # DB 내에 rawdata 없는 경우 중단
-                break
-            atpu = atpu_converter(rawdata)
-            if not atpu:
-                count *= 4
-                continue
-            if len(atpu) < 100:
-                count *= 2
-            first_time = atpu[0]['e_date_time']
-            if first_time < s_time:  # 기준 시간보다 이전인 경우 중단
-                break
-            table_suf = datetime_convert(first_time, to_str=False).strftime("%y%m")  # router 부분
-            while table_suf != datetime_convert(atpu[-1]['e_date_time'], to_str=False).strftime("%y%m"):
-                atpu.pop()  # 이전 달의 데이터는 insert 하지 않음
-            upsert_atpu_table('atpu_' + table_suf, atpu)
-            time_to = atpu[-1]['e_date_time']
-            if len(atpu) > 200:
-                count //= 2
-    return
 
-
-# run_atpu_insert(MARKET_ALL, '2022-01-01T00:00:00', '2022-02-02T00:00:00')
-
-# run_atpu_insert(['KRW-WEMIX'], '2022-01-01T00:00:00', '2022-02-02T00:00:00')
 
 # # 월 초 시간이 출력되는 이유 - run function 상에서 table에 해당하지 않는 데이터를 제거함
 # # KRW-ETH 2022-02-01T01:50:00 200

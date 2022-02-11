@@ -1,5 +1,11 @@
 from django.shortcuts import render
-from coinanser.upbit_api.get_quotation import *
+# from coinanser.upbit_api.get_quotation import *
+from datetime import datetime
+from coinanser.upbit_api.get_quotation import MARKET_ALL
+from coinanser.upbit_api.get_quotation import get_candles_api
+from coinanser.upbit_api.utils import datetime_convert, sig_fig5
+from coinanser.data_handling.db_handler import get_db_rawdata, run_insert_product_DB
+from coinanser.data_handling.rawdata_handler import refine_rawdata
 
 
 def market_data(request):
@@ -21,101 +27,78 @@ def market_data(request):
     if market not in market_search:
         market = list(market_search.keys())[0]
 
-    unit_list = [1, 3, 5, 10, 15, 30, 60, 240, 'days', 'weeks', 'months']
+    unit_list = [1, 3, 5, 10, 15, 30, 60, 240, 'days', 'weeks', 'months']  # TODO: 구현 필요
     unit_str = {u: str(u) + ' 분' if type(u) == int else u for u in unit_list}
     unit_str['days'], unit_str['weeks'], unit_str['months'] = '일', '주', '월'
     unit = unit_get if unit_get in ['days', 'weeks', 'months'] else int(unit_get)
 
-    # show_count_list = [50, 100, 200, 'max']
     show_count_list = [50, 100, 200]
     show_count_str = {sc: str(sc) + ' 건' if type(sc) == int else sc for sc in show_count_list}
-    # show_count_str['max'] = '최대'
-    # show_count = show_count_get if show_count_get == 'max' else int(show_count_get)
     show_count = int(show_count_get) if show_count_get else 200
-
-    # time_now = datetime.now().strftime("%Y/%m/%d %H:%M")
-    # endtime_get = request.GET.get('endtime', time_now)
-    # endtime = datetime.strptime(min(time_now, endtime_get), "%Y/%m/%d %H:%M")
-    # # gcm = get_candles_minutes(market, min_=unit)
-    # # cr = candles_raw(gcm, min_=unit)
-    # gca = get_candles_api(market, unit_=unit, time_to_=endtime)
-
-    # time_now = datetime.now().strftime("%Y/%m/%d %H:%M")  # str
-    # endtime_get = request.GET.get('endtime', time_now)  # str
-    # endtime = min(time_now, endtime_get)  # str
 
     time_now = datetime.now().strftime("%Y/%m/%d %H:%M")  # str
     endtime = min(time_now, endtime_get) if endtime_get else time_now  # str
 
-    gca = get_candles_api(market, unit_=unit,  # count_=show_count,
-                          time_to_=datetime_convert(datetime.strptime(endtime, "%Y/%m/%d %H:%M"), sec_delta=60))
-    date_time_last = datetime_convert(gca[0]['date_time_last'], to_str=False).strftime("%Y/%m/%d %H:%M:%S")
+    # gca = get_candles_api(market, unit_=unit,  # count_=show_count,
+    #                       time_to_=datetime_convert(datetime.strptime(endtime, "%Y/%m/%d %H:%M"), sec_delta=60))
+    # date_time_last = datetime_convert(gca[0]['date_time_last'], to_str=False).strftime("%Y/%m/%d %H:%M:%S")
+    rawdata = get_db_rawdata(market, time_to_=datetime_convert(datetime.strptime(endtime, "%Y/%m/%d %H:%M"), sec_delta=60))
+    refdata = refine_rawdata(rawdata)
+    date_time_last = datetime_convert(refdata[0]['date_time_last'], to_str=False).strftime("%Y/%m/%d %H:%M:%S")
     print(date_time_last)
+
     # rev_gca = reversed(gca)
-    # # mean_price, check = [], 1
-    # # for d in gca:
-    # #     if d['candle_acc_trade_volume'] == 0:  # 거래량이 0인 경우 평균가격 계산 에러
-    # #         check += 1
-    # #     else:
-    # #         mp = [d['candle_acc_trade_price'] / d['candle_acc_trade_volume']]
-    # #         mean_price.extend(mp * check)
-    # #         check = 1
-    # mean_price = []
+    # unit_price_list = []
     # for d in rev_gca:
-    #     if d['candle_acc_trade_volume'] == 0:  # 거래량이 0인 경우 평균가격 계산 에러
-    #         mp = mean_price[-1]
-    #     else:
-    #         mp = d['candle_acc_trade_price'] / d['candle_acc_trade_volume']
-    #     mean_price.append(mp)
-    # mean_price.reverse()
-
-    rev_gca = reversed(gca)
-    unit_price_list = []
-    for d in rev_gca:
-        unit_price = {
-            'date_time': d['date_time'],
-            'high_price': d['high_price'],
-            'low_price': d['low_price'],
-            'trade_price_account': d['candle_acc_trade_price'],
-            'mean_price': d['candle_acc_trade_price'] / d['candle_acc_trade_volume'] if d['candle_acc_trade_volume'] else unit_price_list[-1]['mean_price'],
-        }
-        unit_price['tooltip'] = (
-                '거래시간: ' + datetime_convert(unit_price['date_time'], to_str=False).strftime("%Y/%m/%d %H:%M:%S") +
-                '\\n고가: ' + format(sig_fig5(unit_price['high_price']), ',') + '원' +
-                '\\n평균: ' + format(sig_fig5(unit_price['mean_price']), ',') + '원' +
-                '\\n저가: ' + format(sig_fig5(unit_price['low_price']), ',') + '원' +
-                '\\n거래금액: ' + format(round(unit_price['trade_price_account']), ',') + '원'
-        )
-        unit_price_list.append(unit_price)
-    unit_price_list.reverse()
-
+    #     unit_price = {
+    #         'date_time': d['date_time'],
+    #         'high_price': d['high_price'],
+    #         'low_price': d['low_price'],
+    #         'trade_price_account': d['candle_acc_trade_price'],
+    #         'mean_price': d['candle_acc_trade_price'] / d['candle_acc_trade_volume'] if d['candle_acc_trade_volume'] else unit_price_list[-1]['mean_price'],
+    #     }
+    #     unit_price['tooltip'] = (
+    #             '거래시간: ' + datetime_convert(unit_price['date_time'], to_str=False).strftime("%Y/%m/%d %H:%M:%S") +
+    #             '\\n고가: ' + format(sig_fig5(unit_price['high_price']), ',') + '원' +
+    #             '\\n평균: ' + format(sig_fig5(unit_price['mean_price']), ',') + '원' +
+    #             '\\n저가: ' + format(sig_fig5(unit_price['low_price']), ',') + '원' +
+    #             '\\n거래금액: ' + format(round(unit_price['trade_price_account']), ',') + '원'
+    #     )
+    #     unit_price_list.append(unit_price)
+    # unit_price_list.reverse()
+    #
+    # # if type(show_count) == int and len(gca) > show_count:
+    # #     gca = gca[:show_count]
+    # #     mean_price = mean_price[:show_count]
     # if type(show_count) == int and len(gca) > show_count:
-    #     gca = gca[:show_count]
-    #     mean_price = mean_price[:show_count]
-    if type(show_count) == int and len(gca) > show_count:
-        unit_price_list = unit_price_list[:show_count]
-    min_chart = min([up['low_price'] for up in unit_price_list])
-    max_chart = max([up['high_price'] for up in unit_price_list])
+    #     unit_price_list = unit_price_list[:show_count]
+
+    ref_list = refdata[:show_count]
+    for ref in refdata:
+        ref['tooltip'] = (
+                '거래시간: ' + datetime_convert(ref['date_time'], to_str=False).strftime("%Y/%m/%d %H:%M:%S") +
+                '\\n고가: ' + format(sig_fig5(ref['high_price']), ',') + '원' +
+                '\\n평균: ' + format(sig_fig5(ref['mean_price']), ',') + '원' +
+                '\\n저가: ' + format(sig_fig5(ref['low_price']), ',') + '원' +
+                '\\n거래금액: ' + format(round(ref['candle_acc_trade_price']), ',') + '원'
+        )
+
+    min_chart = min([r['low_price'] for r in ref_list])
+    max_chart = max([r['high_price'] for r in ref_list])
 
     context = {
         # 'data_set': data_set,
         'market_kw': market_kw,
         'market_list': market_search,
         'market': market,
-        # 'unit_list': unit_list,
         'unit_str': unit_str,
         'unit': unit,
         'show_count_str': show_count_str,
         'show_count': show_count,
         'endtime': endtime,
-        # 'date_time': [d['date_time'] for d in gca],  #
         'date_time_last': date_time_last,
-        # 'high_price': [d['high_price'] for d in gca],  #
-        # 'mean_price': mean_price,  #
-        # 'low_price': [d['low_price'] for d in gca],  #
-        # 'trade_price_account': [d['candle_acc_trade_price'] for d in gca],
-        'data_len': len(gca),
-        'unit_price_list': unit_price_list,
+        'data_len': len(ref_list),
+        'unit_price_list': ref_list,
         'min_chart': min_chart,
         'max_chart': max_chart,
     }

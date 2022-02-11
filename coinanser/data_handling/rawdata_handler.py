@@ -1,7 +1,7 @@
 import requests
 from time import sleep
 from common.utils import datetime_convert
-from coinanser.data_handling.db_handler import upsert_rawdata_table
+# from coinanser.data_handling.db_handler import upsert_rawdata_table
 from pprint import pp
 # create_rawdata_table('test123')
 
@@ -112,31 +112,4 @@ def refine_rawdata(rawdata):
 #      print(r['date_time'], r['date_time_last'], r['candle_acc_trade_price'], r['mean_price'], r['trade_price'])
 
 
-def run_rawdata_insert(market_list, s_time, e_time):
-    for market in market_list:
-        time_to = e_time
-        # table_name = 'rawdata_' + datetime_convert(time_to, to_str=False, sec_delta=-1).strftime("%y%m")
-        while s_time < time_to:
-            print(market, time_to)
-            uq = get_upbit_quotation(market, time_to_=time_to)
-            if not uq:  # upbit api data 없는 경우 중단
-                break
-            first_time = uq[0]['candle_date_time_kst']
-            if first_time < s_time:  # 기준 시간보다 이전인 경우 중단
-                break
-            table_suf = datetime_convert(first_time, to_str=False).strftime("%y%m")  # router 부분
-            while table_suf != datetime_convert(uq[-1]['candle_date_time_kst'], to_str=False).strftime("%y%m"):
-                uq.pop()  # 이전 달의 데이터는 insert 하지 않음
-            upsert_rawdata_table('rawdata_' + table_suf, uq)
-            time_to = uq[-1]['candle_date_time_kst']
-    return
 
-
-# run_rawdata_insert(MARKET_ALL, '2021-12-01T00:00:00', '2022-01-01T00:00:00')
-# run_rawdata_insert(['KRW-JST', 'KRW-WEMIX'], '2021-12-01T00:00:00', '2022-01-01T00:00:00')
-
-# market_remain = ['KRW-WEMIX']
-# run_rawdata_insert(market_remain, '2022-01-01T00:00:00', '2022-02-02T00:00:00')
-
-# get_upbit_quotation('KRW-JST', time_to_='2022-01-25T17:42:00')[-1]
-# market, s_time, e_time = 'KRW-WEMIX', '2022-01-01T00:00:00', '2022-02-02T00:00:00'

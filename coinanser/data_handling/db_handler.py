@@ -2,6 +2,8 @@ from my_setting.config import PYMYSQL_CONNECT
 from datetime import datetime, timedelta
 from common.utils import datetime_convert
 import pymysql
+from coinanser.data_handling.rawdata_handler import get_upbit_quotation
+from coinanser.data_handling.atpu_handler import atpu_converter
 
 
 conn = pymysql.connect(
@@ -74,6 +76,34 @@ def upsert_rawdata_table(table_name, uq_):
     conn.commit()
 # uq = get_upbit_quotation('KRW-JST', unit_=1, count_=10, sleep_=False)
 # upsert_rawdata_table(table_name, uq)
+
+
+def run_rawdata_insert(market_list, s_time, e_time):
+    for market in market_list:
+        time_to = e_time
+        # table_name = 'rawdata_' + datetime_convert(time_to, to_str=False, sec_delta=-1).strftime("%y%m")
+        while s_time < time_to:
+            print(market, time_to)
+            uq = get_upbit_quotation(market, time_to_=time_to)
+            if not uq:  # upbit api data 없는 경우 중단
+                break
+            first_time = uq[0]['candle_date_time_kst']
+            if first_time < s_time:  # 기준 시간보다 이전인 경우 중단
+                break
+            table_suf = datetime_convert(first_time, to_str=False).strftime("%y%m")  # router 부분
+            while table_suf != datetime_convert(uq[-1]['candle_date_time_kst'], to_str=False).strftime("%y%m"):
+                uq.pop()  # 이전 달의 데이터는 insert 하지 않음
+            upsert_rawdata_table('rawdata_' + table_suf, uq)
+            time_to = uq[-1]['candle_date_time_kst']
+    return
+# run_rawdata_insert(MARKET_ALL, '2022-02-01T00:00:00', '2022-02-11T14:00:00')
+# run_rawdata_insert(['KRW-JST', 'KRW-WEMIX'], '2021-12-01T00:00:00', '2022-01-01T00:00:00')
+
+# market_remain = ['KRW-WEMIX']
+# run_rawdata_insert(market_remain, '2022-01-01T00:00:00', '2022-02-02T00:00:00')
+
+# get_upbit_quotation('KRW-JST', time_to_='2022-01-25T17:42:00')[-1]
+# market, s_time, e_time = 'KRW-WEMIX', '2022-01-01T00:00:00', '2022-02-02T00:00:00'
 
 
 def select_rawdata(table_name, market, time_to, limit_=200):
@@ -173,6 +203,37 @@ def upsert_atpu_table(table_name, atpu):
     conn.commit()
 
 
+def run_atpu_insert(market_list, s_time, e_time):
+    for market in market_list:
+        time_to = e_time
+        count = 200
+        # table_name = 'rawdata_' + datetime_convert(time_to, to_str=False, sec_delta=-1).strftime("%y%m")
+        while s_time < time_to:
+            print(market, time_to, count)
+            rawdata = get_db_rawdata(market, time_to_=time_to, count_=count)
+            if not rawdata:  # DB 내에 rawdata 없는 경우 중단
+                break
+            atpu = atpu_converter(rawdata)
+            if not atpu:
+                count *= 4
+                continue
+            if len(atpu) < 100:
+                count *= 2
+            first_time = atpu[0]['e_date_time']
+            if first_time < s_time:  # 기준 시간보다 이전인 경우 중단
+                break
+            table_suf = datetime_convert(first_time, to_str=False).strftime("%y%m")  # router 부분
+            while table_suf != datetime_convert(atpu[-1]['e_date_time'], to_str=False).strftime("%y%m"):
+                atpu.pop()  # 이전 달의 데이터는 insert 하지 않음
+            upsert_atpu_table('atpu_' + table_suf, atpu)
+            time_to = atpu[-1]['e_date_time']
+            if len(atpu) > 200:
+                count //= 2
+    return
+# run_atpu_insert(MARKET_ALL, '2022-02-01T00:00:00', '2022-02-11T14:00:00')
+# run_atpu_insert(['KRW-WEMIX'], '2022-01-01T00:00:00', '2022-02-02T00:00:00')
+
+
 def select_atpu(table_name, market, time_to):
     columns = ATPU_COLUMNS
     results = []
@@ -187,7 +248,7 @@ def select_atpu(table_name, market, time_to):
         return results
     selected = cursor.fetchall()
     return selected
-select_atpu('atpu_2202', 'KRW-BTC', '2022-02-01 23:58:01')
+# select_atpu('atpu_2202', 'KRW-BTC', '2022-02-01 23:58:01')
 # select_atpu('atpu_2202', 'KRW-BTC', datetime(2022, 2, 1, 23, 36))
 # select_atpu('atpu_2202', 'KRW-BTC', datetime.now())
 
@@ -213,7 +274,32 @@ def get_atpu_seq(market, time_to_=False, count_=50):
 # atpu_seq = get_atpu_seq('KRW-BTC')
 # for a in atpu_seq:
 #     print(a['e_date_time'], a['s_date_time'], a['duration'], a['mean_price'])
-
 # market, time_to_, count_ = 'KRW-BTC', '2022-02-01T00:58:01', 50
-# TODO: atp unit view 구현 및 market view 수정(minutes(1, 10, 100): DB / day, week, month: API)
+# TODO: rawdata db 실시간 업데이트 구현 및 market view 수정(minutes(1, 10, 100): DB / day, week, month: API)
+
+
+def run_insert_product_DB(market):
+    # 기존 rawdata 확인
+    time_to = datetime_convert(datetime.now())
+    gdr = get_db_rawdata(market, count_=10)
+    columns = ['market', 'candle_date_time_kst', 'check_date_time']
+    for r in gdr:
+        print(r['market'], r['candle_date_time_kst'])
+        time_from = datetime_convert(r['candle_date_time_kst'], to_str=False)
+        table_name = 'rawdata_' + time_from.strftime("%y%m")
+        sql = ("SELECT %s " % ', '.join(columns) +
+               "FROM `test`.`%s`" % table_name +
+               "WHERE (candle_date_time_kst = '%s' AND market = '%s')" % (time_from, market))
+        cursor.execute(sql)
+        selected = cursor.fetchone()
+        if selected['candle_date_time_kst'] < selected['check_date_time'] - timedelta(minutes=1):
+            break
+    run_rawdata_insert([market], s_time=datetime_convert(time_from), e_time=time_to)  # api to db
+    run_atpu_insert([market], s_time=datetime_convert(time_from), e_time=time_to)  # TODO: 속도 문제로 따로 진행해야 함
+    return
+
+# run_insert_product_DB('KRW-BTC')
+# while True:
+#     for market in MARKET_ALL:
+#         run_insert_product_DB(market)
 
