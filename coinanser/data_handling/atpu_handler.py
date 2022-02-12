@@ -26,6 +26,7 @@ def atpu_converter(rawdata):
                 'trade_price': end['trade_price'],
                 'mean_price': atp_sum / atv_sum,
                 'atp_sum': atp_sum,
+                'check_date_time': end['check_date_time']
             }
             atp_sum -= end['candle_acc_trade_price']
             atv_sum -= end['candle_acc_trade_volume']

@@ -18,7 +18,7 @@ cursor = conn.cursor(pymysql.cursors.DictCursor)
 RAWDATA_COLUMNS = ['market', 'candle_date_time_utc', 'candle_date_time_kst', 'opening_price', 'high_price',
                    'low_price', 'trade_price', 'timestamp', 'candle_acc_trade_price', 'candle_acc_trade_volume']
 ATPU_COLUMNS = ['market', 'e_date_time', 's_date_time', 'duration', 'opening_price',
-                'high_price', 'low_price', 'trade_price', 'mean_price', 'atp_sum']
+                'high_price', 'low_price', 'trade_price', 'mean_price', 'atp_sum', 'check_date_time']
 
 
 def check_table(table_name):
@@ -106,8 +106,12 @@ def run_rawdata_insert(market_list, s_time, e_time):
 # market, s_time, e_time = 'KRW-WEMIX', '2022-01-01T00:00:00', '2022-02-02T00:00:00'
 
 
-def select_rawdata(table_name, market, time_to, limit_=200):
+def select_rawdata(table_name, market, time_to, limit_=200, check_time=False):
     columns = RAWDATA_COLUMNS  # get_upbit_quotation 과 형식을 맞추기 위해 check_date_time 은 받아오지 않음
+    time_key = ['candle_date_time_kst', 'candle_date_time_utc']
+    if check_time:
+        columns = columns[:] + ['check_date_time']  # atpu insert 시 check_time 그대로 가져옴
+        time_key.append('check_date_time')
     results = []
     sql = ("SELECT %s " % ', '.join(columns) +
            "FROM `test`.`%s`" % table_name +
@@ -120,15 +124,16 @@ def select_rawdata(table_name, market, time_to, limit_=200):
         return results
     selected = cursor.fetchall()
     for s in selected:
-        for k in ['candle_date_time_kst', 'candle_date_time_utc']:
-            s[k] = datetime_convert(s[k])
+        # print(s)
+        for tk in time_key:
+            s[tk] = datetime_convert(s[tk])
         s['unit'] = 1
         results.append(s)
     return results
-# tr = tb_rawdata('rawdata_2201', 'KRW-JST', '2022-01-11T19:01:00')
-# for t in tr:
-#     print(t['candle_date_time_kst'])
-# pq = prep_quotation(sr)
+# sr = select_rawdata('rawdata_2201', 'KRW-JST', '2022-01-11T19:01:00', limit_=5, check_time=True)
+# for s in sr:
+#     print(s['candle_date_time_kst'])
+# rr = refine_rawdata(sr)
 
 
 def get_db_rawdata(market, time_to_=False, count_=200):
@@ -137,7 +142,7 @@ def get_db_rawdata(market, time_to_=False, count_=200):
     table_name = 'rawdata_' + time_to.strftime("%y%m")
     results = []
     while len(results) < count_:
-        sr = select_rawdata(table_name, market, time_to, limit_=count_)
+        sr = select_rawdata(table_name, market, time_to, limit_=count_, check_time=True)
         if not sr:
             # router 부분
             time_to = (time_to - timedelta(seconds=1)).replace(hour=0, minute=0, second=0)
@@ -148,10 +153,10 @@ def get_db_rawdata(market, time_to_=False, count_=200):
         results.extend(sr)
         time_to = datetime_convert(results[-1]['candle_date_time_kst'], to_str=False)
     return results[:count_]
-# sr = get_db_rawdata('KRW-BTC', '2022-01-01T01:01:00', 300)
-# sr = get_db_rawdata('KRW-BTC', '2021-12-01T01:01:00', 300)
-# for i, s in enumerate(sr):
-#     print(i, s['candle_date_time_kst'])
+# gdr = get_db_rawdata('KRW-BTC', '2022-01-01T01:01:00', 300)
+# gdr = get_db_rawdata('KRW-BTC', '2021-12-01T01:01:00', 300)
+# for i, r in enumerate(gdr):
+#     print(i, r['candle_date_time_kst'])
 # len(sr)
 
 
@@ -176,11 +181,11 @@ def create_atpu_table(table_name):
             `trade_price` FLOAT NOT NULL,
             `mean_price` FLOAT NOT NULL,
             `atp_sum` DOUBLE NOT NULL,
-            `check_date_time` TIMESTAMP DEFAULT NOW(),
+            `check_date_time` TIMESTAMP NOT NULL,
             UNIQUE INDEX `market_date_time_UNIQUE` (`e_date_time`, `market`),
             INDEX (`market`)
             )ENGINE = MyISAM;
-            ''' % table_name
+            ''' % table_name  # TODO: check_date_time - default now 에서 not null로 변경함 / 적용 필요
         cursor.execute(sql)
         conn.commit()
         print(sql)
@@ -191,7 +196,7 @@ def upsert_atpu_table(table_name, atpu):
     columns = ATPU_COLUMNS
     val = [tuple(r[c] for c in columns) for r in atpu]
     sql = ("INSERT INTO `test`.`" + table_name + "` (" + ', '.join(columns) +
-           ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" +
+           ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" +
            " ON DUPLICATE KEY UPDATE " +
            ', '.join([c + ' = VALUES(' + c + ')' for c in columns]) +
            ", check_date_time = default;")  # data 시간을 확인시간과 비교하여 데이터가 완전히 수집되었는지 확인 가능
@@ -278,27 +283,43 @@ def get_atpu_seq(market, time_to_=False, count_=50):
 # TODO: rawdata db 실시간 업데이트 구현 및 market view 수정(minutes(1, 10, 100): DB / day, week, month: API)
 
 
-def run_insert_product_DB(market):
-    # 기존 rawdata 확인
-    time_to = datetime_convert(datetime.now())
-    gdr = get_db_rawdata(market, count_=10)
-    columns = ['market', 'candle_date_time_kst', 'check_date_time']
-    for r in gdr:
-        print(r['market'], r['candle_date_time_kst'])
-        time_from = datetime_convert(r['candle_date_time_kst'], to_str=False)
-        table_name = 'rawdata_' + time_from.strftime("%y%m")
-        sql = ("SELECT %s " % ', '.join(columns) +
-               "FROM `test`.`%s`" % table_name +
-               "WHERE (candle_date_time_kst = '%s' AND market = '%s')" % (time_from, market))
+def check_complete(market, db='rawdata'):
+    if db == 'rawdata':
+        record = get_db_rawdata(market, count_=10)
+        stan_col = 'candle_date_time_kst'
+    if db == 'atpu':
+        record = get_atpu_seq(market, count_=10)
+        stan_col = 'e_date_time'
+    for r in record:
+        time_from = datetime_convert(r[stan_col], to_str=False)
+        table_name = db + '_' + time_from.strftime("%y%m")
+        sql = ("SELECT %s, check_date_time " % stan_col +
+               "FROM `test`.`%s` " % table_name +
+               "WHERE (`%s` = '%s' AND `market` = '%s');" % (stan_col, time_from, market))
         cursor.execute(sql)
         selected = cursor.fetchone()
-        if selected['candle_date_time_kst'] < selected['check_date_time'] - timedelta(minutes=1):
-            break
-    run_rawdata_insert([market], s_time=datetime_convert(time_from), e_time=time_to)  # api to db
-    run_atpu_insert([market], s_time=datetime_convert(time_from), e_time=time_to)  # TODO: 속도 문제로 따로 진행해야 함
+        if selected[stan_col] < selected['check_date_time'] - timedelta(minutes=1):
+            print(market, r[stan_col])
+            return datetime_convert(time_from)
+    return False
+# check_complete('KRW-BTC')
+# check_complete('KRW-BTC', 'atpu')
+
+
+def run_insert_product_DB(market, db='rawdata'):
+    # 기존 rawdata 확인
+    time_to = datetime_convert(datetime.now())
+    completed = check_complete(market)
+    if db == 'rawdata':
+        run_rawdata_insert([market], s_time=completed, e_time=time_to)  # api to db
+    if db == 'atpu':  # 속도 문제로 rawdata와 따로 진행해야 함
+        # TODO: check time rawdata table에서 가져오는 것으로 수정 완료 - 실시간 insert도 rawdata와 동일한 로직으로 변경 필요
+        time_from = datetime_convert(get_atpu_seq(market, count_=1)[0]['e_date_time'])
+        run_atpu_insert([market], s_time=time_from, e_time=datetime_convert(completed, sec_delta=1))
     return
 
-# run_insert_product_DB('KRW-BTC')
+# run_insert_product_DB('KRW-BTC', 'rawdata')
+# run_insert_product_DB('KRW-BTC', 'atpu')
 # while True:
 #     for market in MARKET_ALL:
 #         run_insert_product_DB(market)
