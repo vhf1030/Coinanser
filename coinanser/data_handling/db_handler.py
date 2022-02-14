@@ -198,8 +198,7 @@ def upsert_atpu_table(table_name, atpu):
     sql = ("INSERT INTO `test`.`" + table_name + "` (" + ', '.join(columns) +
            ") VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)" +
            " ON DUPLICATE KEY UPDATE " +
-           ', '.join([c + ' = VALUES(' + c + ')' for c in columns]) +
-           ", check_date_time = default;")  # data 시간을 확인시간과 비교하여 데이터가 완전히 수집되었는지 확인 가능
+           ', '.join([c + ' = VALUES(' + c + ')' for c in columns]) + ";")
     try:
         cursor.executemany(sql, val)
     except pymysql.err.ProgrammingError:
@@ -309,16 +308,14 @@ def check_complete(market, db='rawdata'):
 def run_insert_product_DB(market, db='rawdata'):
     # 기존 rawdata 확인
     time_to = datetime_convert(datetime.now())
-    completed = check_complete(market)
+    comp = check_complete(market, db=db)
     if db == 'rawdata':
-        run_rawdata_insert([market], s_time=completed, e_time=time_to)  # api to db
+        run_rawdata_insert([market], s_time=comp, e_time=time_to)  # api to db
     if db == 'atpu':  # 속도 문제로 rawdata와 따로 진행해야 함
-        # TODO: check time rawdata table에서 가져오는 것으로 수정 완료 - 실시간 insert도 rawdata와 동일한 로직으로 변경 필요
-        time_from = datetime_convert(get_atpu_seq(market, count_=1)[0]['e_date_time'])
-        run_atpu_insert([market], s_time=time_from, e_time=datetime_convert(completed, sec_delta=1))
+        run_atpu_insert([market], s_time=comp, e_time=time_to)  # db to db
     return
 
-# run_insert_product_DB('KRW-BTC', 'rawdata')
+# run_insert_product_DB('KRW-ETH', 'rawdata')
 # run_insert_product_DB('KRW-BTC', 'atpu')
 # while True:
 #     for market in MARKET_ALL:

@@ -2,9 +2,9 @@ from django.shortcuts import render
 # from coinanser.upbit_api.get_quotation import *
 from datetime import datetime
 from coinanser.upbit_api.get_quotation import MARKET_ALL
-from coinanser.upbit_api.get_quotation import get_candles_api
+# from coinanser.upbit_api.get_quotation import get_candles_api
 from coinanser.upbit_api.utils import datetime_convert, sig_fig5
-from coinanser.data_handling.db_handler import get_db_rawdata, run_insert_product_DB
+from coinanser.data_handling.db_handler import get_upbit_quotation, get_db_rawdata
 from coinanser.data_handling.rawdata_handler import refine_rawdata
 
 
@@ -27,7 +27,7 @@ def market_data(request):
     if market not in market_search:
         market = list(market_search.keys())[0]
 
-    unit_list = [1, 3, 5, 10, 15, 30, 60, 240, 'days', 'weeks', 'months']  # TODO: 구현 필요
+    unit_list = [1, 5, 20, 60, 120, 'days', 'weeks', 'months']  # TODO: 구현 필요
     unit_str = {u: str(u) + ' 분' if type(u) == int else u for u in unit_list}
     unit_str['days'], unit_str['weeks'], unit_str['months'] = '일', '주', '월'
     unit = unit_get if unit_get in ['days', 'weeks', 'months'] else int(unit_get)
@@ -42,7 +42,11 @@ def market_data(request):
     # gca = get_candles_api(market, unit_=unit,  # count_=show_count,
     #                       time_to_=datetime_convert(datetime.strptime(endtime, "%Y/%m/%d %H:%M"), sec_delta=60))
     # date_time_last = datetime_convert(gca[0]['date_time_last'], to_str=False).strftime("%Y/%m/%d %H:%M:%S")
-    rawdata = get_db_rawdata(market, time_to_=datetime_convert(datetime.strptime(endtime, "%Y/%m/%d %H:%M"), sec_delta=60))
+    time_to = datetime_convert(datetime.strptime(endtime, "%Y/%m/%d %H:%M"), sec_delta=60)
+    if unit in ['days', 'weeks', 'months']:
+        rawdata = get_upbit_quotation(market, unit_=unit, time_to_=time_to)
+    else:
+        rawdata = get_db_rawdata(market, time_to_=time_to)
     refdata = refine_rawdata(rawdata)
     date_time_last = datetime_convert(refdata[0]['date_time_last'], to_str=False).strftime("%Y/%m/%d %H:%M:%S")
     print(date_time_last)

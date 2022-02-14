@@ -43,6 +43,8 @@ def atpu_board(request):
     # gca = get_candles_api(market, unit_=unit,  # count_=show_count,
     #                       time_to_=datetime_convert(datetime.strptime(endtime, "%Y/%m/%d %H:%M"), sec_delta=60))
     # date_time_last = datetime_convert(gca[0]['date_time_last'], to_str=False).strftime("%Y/%m/%d %H:%M:%S")
+    run_insert_product_DB(market, db='atpu')
+    # TODO: 계산 중 페이지를 이동하는 경우 insert가 완전히 되지 않는 것으로 보임 - 확인 필요
     atpu_seq = get_atpu_seq(market, count_=show_count,
                             time_to_=datetime_convert(datetime.strptime(endtime, "%Y/%m/%d %H:%M"), sec_delta=60))
     date_time_first = datetime_convert(atpu_seq[-1]['s_date_time'], to_str=False).strftime("%Y/%m/%d %H:%M:%S")
